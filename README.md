@@ -1,47 +1,38 @@
-# Smart_Home_Agent
-CREATE TABLE sensor_data (
-    id INTEGER PRIMARY KEY,
-    timestamp DATETIME NOT NULL,
-    temperature FLOAT,
-    motion_detected BOOLEAN,
-    door_open BOOLEAN,
-    window_open BOOLEAN,
-    light_on BOOLEAN,
-    tv_on BOOLEAN,
-    energy_usage_kw FLOAT
-);
+# Smart Home Agent
 
-CREATE TABLE agent_decisions (
-    decision_id INTEGER PRIMARY KEY,
-    sensor_id INTEGER NOT NULL,
-    agent_name TEXT NOT NULL,
-    decision TEXT NOT NULL,
-    confidence FLOAT,
-    timestamp DATETIME NOT NULL,
-    FOREIGN KEY (sensor_id) REFERENCES sensor_data(id)
-);
+A multi-agent smart home system that processes sensor data and makes decisions about security, climate control, and energy usage.
 
-CREATE TABLE system_log (
-    log_id INTEGER PRIMARY KEY,
-    timestamp DATETIME NOT NULL,
-    message TEXT NOT NULL,
-    severity TEXT
-);
+## Features
+- Security Agent: detects intrusions, motion anomalies, and door/window events.
+- Climate Agent: decides heating/cooling actions based on temperature.
+- Energy Agent: monitors device usage and flags waste.
+- Smart Home Manager: routes sensor data to the correct agent and logs decisions.
 
-CREATE TABLE device_state (
-    id INTEGER PRIMARY KEY,
-    last_updated DATETIME NOT NULL,
-    heating_on BOOLEAN,
-    cooling_on BOOLEAN,
-    light_on BOOLEAN,
-    tv_on BOOLEAN
-);
+## Project Structure
+- `/agents/` — Python classes for each agent
+- `/manager/` — orchestrator that routes sensor data
+- `/database/` — SQL schema + database models
+- `/tests/` — test cases for Part 4 of the worksheet
 
-CREATE TABLE anomalies (
-    anomaly_id INTEGER PRIMARY KEY,
-    sensor_id INTEGER NOT NULL,
-    description TEXT NOT NULL,
-    severity TEXT,
-    timestamp DATETIME NOT NULL,
-    FOREIGN KEY (sensor_id) REFERENCES sensor_data(id)
-);
+## Database
+The project uses a relational database to store:
+- Sensor readings
+- Agent decisions
+- Device states
+- System logs
+- Anomalies
+
+See `/database/schema.sql` for the full SQL schema.
+
+## How to Run
+1. Install dependencies  
+2. Run `python main.py`  
+3. View logs and decisions in the console or database
+
+## Purpose
+This project is built for the Python Agents Portfolio Worksheet and demonstrates:
+- Specialist agents
+- Routing
+- Decision rules
+- Logging
+- Testing and accuracy measurement
