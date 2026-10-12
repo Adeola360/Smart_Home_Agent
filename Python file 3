@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit 16 Progressive Test</title>
+<style>
+:root{
+  --bg:#f4f5f8; --panel:#ffffff; --ink:#15181f; --muted:#5a6376; --line:#e2e5ec;
+  --accent:#3b4ea0; --accent-soft:#eef0fa; --ok:#1c7a4a; --ok-soft:#e6f4ec;
+  --bad:#b4262c; --bad-soft:#fbeaea; --warn:#8a5a00; --warn-soft:#fdf2dc;
+  --l1:#3b4ea0; --l2:#1c7a7a; --l3:#8a5a00; --l4:#8a3a7a; --l5:#b4262c;
+  --radius:10px; --shadow:0 1px 2px rgba(20,24,40,.06),0 6px 20px rgba(20,24,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111318; --panel:#1a1d25; --ink:#e9ecf3; --muted:#9aa3b6; --line:#2b303b;
+    --accent:#8ea0e8; --accent-soft:#232842; --ok:#6ed19b; --ok-soft:#182a20;
+    --bad:#ef8a8a; --bad-soft:#2c1a1c; --warn:#e5b95e; --warn-soft:#2d2513;
+    --l1:#8ea0e8; --l2:#6fc9c9; --l3:#e5b95e; --l4:#d79ad0; --l5:#ef8a8a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 96px}
+
+/* ---------- header ---------- */
+header.top{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:40; box-shadow:0 1px 0 var(--line);
+}
+.top-inner{max-width:900px;margin:0 auto;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.01em;flex:1 1 220px}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;letter-spacing:0}
+.score-chip{
+  background:var(--accent-soft); color:var(--accent); border-radius:999px;
+  padding:6px 14px; font-weight:700; font-size:14px; white-space:nowrap;
+}
+.bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden;width:100%;margin-top:4px}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s ease}
+
+/* ---------- level nav ---------- */
+nav.levels{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;max-width:900px;margin:0 auto;scrollbar-width:thin}
+nav.levels button{
+  flex:0 0 auto; border:1px solid var(--line); background:var(--panel); color:var(--muted);
+  padding:7px 13px; border-radius:999px; font:600 13px/1 inherit; cursor:pointer; white-space:nowrap;
+}
+nav.levels button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+nav.levels button .tick{color:var(--ok);font-weight:800}
+nav.levels button[aria-current="true"] .tick{color:#fff}
+
+/* ---------- cards ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin:16px 0}
+.level-head{padding:26px 22px;border-left:5px solid var(--accent)}
+.level-head h2{margin:0 0 4px;font-size:22px;letter-spacing:-.02em}
+.level-head p{margin:0;color:var(--muted);font-size:14.5px}
+.level-meta{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{font:600 11.5px/1 inherit;letter-spacing:.03em;text-transform:uppercase;padding:5px 9px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.tag.grey{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+.q{border-top:1px solid var(--line);padding:22px 0 4px}
+.q:first-of-type{border-top:0;padding-top:4px}
+.q-head{display:flex;gap:10px;align-items:baseline;margin-bottom:10px}
+.q-num{font:700 13px/1.5 inherit;color:var(--muted);flex:0 0 auto;min-width:34px}
+.q-text{font-weight:600;flex:1}
+.q-marks{font:600 12px/1.5 inherit;color:var(--muted);white-space:nowrap}
+.q-ref{font:500 11.5px/1 inherit;color:var(--muted);letter-spacing:.02em;margin-left:44px;margin-bottom:10px;text-transform:uppercase}
+
+.scenario{background:var(--accent-soft);border-radius:8px;padding:14px 16px;margin:0 0 16px;font-size:14.5px}
+.scenario > b:first-child{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;color:var(--accent);margin-bottom:5px}
+.scenario b{font-weight:700}
+
+.teach code,.scenario code,.model code,.q-text code{font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;word-break:break-word}
+.scenario code{display:inline-block;margin:1px 0}
+table.matrix{border-collapse:collapse;margin:8px 0 12px;font-size:14px;width:100%;max-width:520px}
+table.matrix th,table.matrix td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+table.matrix th{background:var(--bg);font-weight:600}
+table.matrix td.l{background:var(--ok-soft);color:var(--ok);font-weight:700}
+table.matrix td.m{background:var(--warn-soft);color:var(--warn);font-weight:700}
+table.matrix td.h{background:var(--bad-soft);color:var(--bad);font-weight:700}
+table.matrix td.x{background:var(--bad);color:#fff;font-weight:800}
+/* ---------- knowledge recap ---------- */
+.recap{border-left:5px solid var(--ok)}
+.recap h3{margin:0 0 4px;font-size:17px;letter-spacing:-.01em}
+.recap>p.lead{margin:0 0 16px;color:var(--muted);font-size:14px}
+.recap-item{border-top:1px solid var(--line);padding:14px 0}
+.recap-item:first-of-type{border-top:0;padding-top:0}
+.recap-item h4{margin:0 0 6px;font-size:14.5px;color:var(--ok)}
+.recap-item p{margin:0 0 8px;font-size:14.5px}
+.recap-item p:last-child{margin-bottom:0}
+.recap-item ul{margin:6px 0 0;padding-left:20px;font-size:14.5px}
+.recap-item li{margin-bottom:4px}
+.recap-item .kw{font-weight:600}
+.recap-toggle{margin-top:6px}
+
+.teach{
+  margin:0 0 12px 44px;padding:11px 14px;border-radius:8px;
+  background:var(--warn-soft);border-left:3px solid var(--warn);font-size:14px
+}
+.teach > b:first-child{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--warn);margin-bottom:4px}
+.teach b{font-weight:700}
+@media(max-width:640px){.teach,.opts,.rows,.written,.q-ref,.feedback{margin-left:0!important}}
+
+/* ---------- options ---------- */
+.opts{margin-left:44px;display:grid;gap:7px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:15px;background:var(--panel)}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin:4px 0 0;flex:0 0 auto;accent-color:var(--accent)}
+.opt.correct{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt.missed{border-color:var(--ok);border-style:dashed}
+
+/* ---------- match / classify ---------- */
+.rows{margin-left:44px;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:1fr 210px;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px}
+.row select{font:inherit;font-size:14px;padding:7px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.row.correct{background:var(--ok-soft);border-color:var(--ok)}
+.row.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.row .fix{grid-column:1/-1;font-size:13px;color:var(--bad);font-weight:600}
+@media(max-width:640px){.row{grid-template-columns:1fr}}
+
+/* ---------- written ---------- */
+.written{margin-left:44px}
+textarea{
+  width:100%;min-height:130px;font:inherit;font-size:15px;padding:12px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical
+}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+.hint b{color:var(--ink)}
+
+.model{margin-top:14px;border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:8px;padding:16px;background:var(--ok-soft);display:none}
+.model.show{display:block}
+.model h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--ok)}
+.model p{margin:0 0 10px;font-size:14.5px}
+.model p:last-child{margin-bottom:0}
+
+.criteria{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:16px;display:none}
+.criteria.show{display:block}
+.criteria h4{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.criteria .sub{font-size:13px;color:var(--muted);margin:0 0 12px}
+.crit{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:14.5px;cursor:pointer;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0}
+.crit input{margin:4px 0 0;accent-color:var(--ok)}
+.self-score{margin-top:12px;padding-top:12px;border-top:2px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.self-score span.val{color:var(--accent);font-size:18px}
+
+/* ---------- buttons ---------- */
+button.btn{
+  font:600 14px/1 inherit;padding:11px 18px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;cursor:pointer
+}
+button.btn.ghost{background:transparent;color:var(--accent)}
+button.btn.grey{background:transparent;color:var(--muted);border-color:var(--line)}
+button.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+
+.feedback{margin-left:44px;margin-top:10px;font-size:14px;padding:10px 12px;border-radius:7px;display:none}
+.feedback.show{display:block}
+.feedback.good{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.feedback b{display:block;margin-bottom:3px}
+
+.level-result{margin-top:18px;padding:16px;border-radius:8px;background:var(--accent-soft);display:none;font-size:15px}
+.level-result.show{display:block}
+.level-result strong{font-size:20px}
+
+/* ---------- results ---------- */
+.big-score{text-align:center;padding:10px 0 20px}
+.big-score .pct{font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.big-score .of{color:var(--muted);font-size:15px;margin-top:6px}
+.grade{display:inline-block;margin-top:14px;padding:8px 20px;border-radius:999px;font-weight:700;font-size:15px}
+.grade.d{background:var(--ok-soft);color:var(--ok)}
+.grade.m{background:var(--accent-soft);color:var(--accent)}
+.grade.p{background:var(--warn-soft);color:var(--warn)}
+.grade.u{background:var(--bad-soft);color:var(--bad)}
+table.bd{width:100%;border-collapse:collapse;margin-top:8px;font-size:14.5px}
+table.bd th,table.bd td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+table.bd th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+table.bd td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.meter{height:7px;background:var(--line);border-radius:999px;overflow:hidden;min-width:90px}
+.meter>i{display:block;height:100%;background:var(--accent)}
+ul.revise{margin:8px 0 0;padding-left:20px;font-size:14.5px}
+ul.revise li{margin-bottom:6px}
+
+.hidden{display:none}
+@media print{
+  header.top,nav.levels,.actions,button{display:none!important}
+  .card{break-inside:avoid;box-shadow:none}
+  body{background:#fff}
+}
+.srcs{font-size:13px;color:var(--muted);margin:28px 0 40px;line-height:1.55}
+.srcs a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">Unit 16: Cloud Storage and Collaboration Tools — Progressive Test
+      <small>BTEC Level 3 National IT · Learning aims A, B and C</small>
+    </div>
+    <div class="score-chip" id="chip">0 / 0 marks</div>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:0 16px 8px"><div class="bar"><i id="bar"></i></div></div>
+  <nav class="levels" id="nav"></nav>
+</header>
+
+<div class="wrap">
+  <main id="main"></main>
+  <footer class="srcs">
+    <p><b>Built from:</b> <a href="https://qualifications.pearson.com/content/dam/pdf/BTEC-Nationals/Information-Technology/2016/specification-and-sample-assessments/specification-pearson-btec-level-3-national-extended-diploma-in-information-technology.pdf" target="_blank" rel="noopener">Pearson BTEC Level 3 National Extended Diploma in IT specification, Unit 16</a> (also an optional unit in the Diploma; not available in the Extended Certificate).</p>
+    <p><b>Case evidence:</b> <a href="https://www.computerweekly.com/news/366633536/AWS-apologises-for-14-hour-outage-and-sets-out-causes-of-US-datacentre-region-downtime" target="_blank" rel="noopener">Computer Weekly on the AWS outage</a> · <a href="https://azure.status.microsoft/en-us/status/history/?trackingId=YKYN-BWZ" target="_blank" rel="noopener">Azure Front Door incident review</a> · <a href="https://btw.media/en/the-ovhcloud-fire-showed-that-data-locality-is-not-disaster-separation" target="_blank" rel="noopener">OVHcloud fire analysis</a> · <a href="https://www.theregister.com/off-prem/2025/07/25/microsoft-exec-admits-it-cannot-guarantee-data-sovereignty/458553" target="_blank" rel="noopener">The Register on Microsoft France</a> · <a href="https://assets.publishing.service.gov.uk/media/688b20e6ff8c05468cb7b120/summary_of_final_decision.pdf" target="_blank" rel="noopener">CMA cloud final decision</a> · <a href="https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-145.pdf" target="_blank" rel="noopener">NIST SP 800-145</a> · <a href="https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-brief-guide-to-international-transfers/" target="_blank" rel="noopener">ICO international transfers</a></p>
+  </footer>
+</div>
+
+<script>
+/* UNIT 16 — PROGRESSIVE TEST · Cloud Storage and Collaboration Tools */
+const SCEN = "<p><b>Harbour &amp; Lane Architects</b> is a 38-person practice with a main studio on Newcastle Quayside and a smaller office in Durham. Site surveyors spend two or three days a week on building sites using tablets. All files sit on a single Windows Server 2016 file server in a store cupboard in Newcastle; the office manager takes a nightly USB backup home. Email runs on an ageing on-premises Exchange 2016 server. Drawing files from the CAD package are typically 200 MB to 2 GB. Drawings are sent to clients as email attachments or on memory sticks, and Durham staff connect to Newcastle over a slow VPN. Six staff work part-time or compressed hours, and one designer is visually impaired and uses a screen reader. IT is looked after by the office manager plus an external contractor who visits once a month. Broadband is 80 Mbps down and 20 Mbps up in Newcastle, and 40 Mbps down and 10 Mbps up in Durham. The practice holds client names, addresses and some planning-related personal data. The partners have asked for a cloud storage and collaboration solution, but they are worried about cost, security and what happens if the internet goes down.</p>";
+
+const DATA = [
+/* ========================= LEVEL 1 ========================= */
+{
+  id:"L1", name:"Level 1", colour:"var(--l1)",
+  title:"Level 1 · Knowledge and Recall",
+  blurb:"Straight recall of the reasons for cloud adoption, the five key characteristics, service and delivery models, the legal framework, and the vocabulary of planning, testing and reviewing a cloud solution. Technical language used precisely is what turns a Pass explanation into a Merit comparison.",
+  meta:["Learning aims A–C","1 mark per question"],
+  recap:[
+    {h:"How this test works",
+     b:"<p>Five levels, rising in difficulty. <span class='kw'>Levels 1 and 2</span> mark themselves: answer, then press <em>Check this level</em> for your mark and an explanation of every answer. <span class='kw'>Levels 3, 4 and 5</span> are written: type your answer first, then reveal the model answer and mark scheme, and tick only the points you actually made. Your running total sits top right; the <em>Results</em> tab breaks it down by learning aim and by assessment criterion and tells you what to revise.</p><p>Read the recap at the start of each level before answering. Nothing is saved when you close the page, so finish a level in one sitting or print your results at the end.</p>"},
+    {h:"The assessment",
+     b:"<p>Unit 16 is <span class='kw'>internally assessed</span>: 60 guided learning hours, a maximum of <span class='kw'>two assignments</span>, set and marked by your centre and quality-assured by Pearson. <span class='kw'>Assignment 1 (learning aim A)</span>: A.P1, A.P2, A.M1, A.D1, using a <span class='kw'>real organisation with no or limited cloud adoption</span>. <span class='kw'>Assignment 2 (learning aims B and C)</span>: B.P3, B.P4, C.P5, C.P6, B.M2, C.M3, BC.D2, BC.D3. You design, build, test and manage a working solution for at least <span class='kw'>two weeks</span>. The marks in this test are for practice only; your real grade comes from the criteria.</p>"},
+    {h:"A1 Cloud computing in organisations",
+     b:"<p>Reasons organisations adopt cloud: <span class='kw'>improved productivity</span>, <span class='kw'>improved or diversified service</span>, <span class='kw'>improved user experience</span>, <span class='kw'>reduced costs</span> and <span class='kw'>flexibility</span>.</p><ul><li><span class='kw'>On-demand self-service</span>: the customer provisions storage, users or servers through a portal with no human at the provider involved.</li><li><span class='kw'>Ubiquitous access</span>: available over the network from any location on standard devices (browser, phone, tablet).</li><li><span class='kw'>Resource pooling</span>: the provider's physical resources serve many customers at once, allocated dynamically (multi-tenancy).</li><li><span class='kw'>Measured service</span>: usage is metered, so you pay for what you use and can see what each department consumes.</li><li><span class='kw'>Rapid elasticity</span>: capacity scales up or down quickly, sometimes automatically, to match demand.</li></ul><p>These five match the NIST definition (SP 800-145) that most textbooks are based on.</p>"},
+    {h:"A2 Models",
+     b:"<ul><li><span class='kw'>SaaS</span>: finished software delivered over the internet (Microsoft 365, Google Workspace, Dropbox). The provider manages everything except your data, users and settings.</li><li><span class='kw'>PaaS</span>: a managed platform to build and run your own applications (Azure App Service, Google App Engine). You manage the code and data.</li><li><span class='kw'>IaaS</span>: virtual machines, storage and networks (Amazon EC2, Azure Virtual Machines). You manage the guest operating system upwards.</li></ul><p><span class='kw'>Virtualisation</span> is what makes cloud possible: a hypervisor splits one physical server into many isolated virtual machines, which enables resource pooling, elasticity and multi-tenancy.</p><p>Delivery models: <span class='kw'>public</span> (shared, provider-owned), <span class='kw'>private</span> (one organisation), <span class='kw'>hybrid</span> (a mix, connected), <span class='kw'>community</span> (shared by organisations with common concerns, such as a group of councils or schools). Hosting can be <span class='kw'>self-hosted</span> or <span class='kw'>third-party</span>. Key terms: <span class='kw'>automation</span>, <span class='kw'>cloud bursting</span> (overflowing from private to public cloud at peak), <span class='kw'>just-in-time service</span>, <span class='kw'>multi-tenancy</span>.</p>"},
+    {h:"A3–A5 Requirements, impact and law",
+     b:"<p><span class='kw'>A3 requirements</span>: current IT systems and services, organisational aims, customers, staff (job role, accessibility, working patterns), location, legal and ethical (licensing, data security, privacy) and requirements cloud cannot meet, such as controlling machinery on a factory floor.</p><p><span class='kw'>A4 impact</span>: on individuals (flexibility, cost, efficiency, risks such as data availability and third-party ownership, challenges such as support, skills and training) and on organisations (user experience, staffing, cost including <span class='kw'>pay-as-you-grow</span> and <span class='kw'>chargeback</span>, implementation, backup and disaster recovery, constraints such as bandwidth and firewall restrictions, legal ownership and jurisdiction, dispute resolution).</p><p><span class='kw'>A5 legislation</span>: Data Protection Act 2018 and UK GDPR (amended by the Data (Use and Access) Act 2025), Computer Misuse Act 1990, Copyright, Designs and Patents Act 1988, telecommunications lawful business practice and interception rules, Fraud Act 2006, legal liability and contractual obligations.</p>"},
+    {h:"B and C Plan, build, test, review",
+     b:"<p><span class='kw'>B1</span> plan: purpose, client requirements, user needs, technical requirements, legal and ethical issues, risks and mitigation. <span class='kw'>B2</span> review designs with the client, document meetings, refine and update the specification. <span class='kw'>B3</span> develop: infrastructure (server, OS, virtual instance), platform (guest OS image, host resource allocation), software, <span class='kw'>user management</span> (new users, passwords, storage quotas, privileges, access rights), cloud clients (browser plug-ins, mobile apps), managing collaboration (targets, protocols, roles), documentation.</p><p><span class='kw'>C1</span> testing: <span class='kw'>functional, user, performance, stress, security</span>. <span class='kw'>C2</span> reviewing: security patches and breaches, software updates, compatibility, changing requirements, hardware developments. <span class='kw'>C3</span> lessons learned. <span class='kw'>C4</span> presentation skills. <span class='kw'>C5</span> reviewing your own skills, knowledge and behaviours.</p>"}
+  ],
+  questions:[
+  {type:"mcq", area:"A", ao:"Unit overview", ref:"Specification · Assessment",
+   q:"How is Unit 16 assessed?",
+   options:["A 2-hour written exam set and marked by Pearson","Internally, through a maximum of two assignments set and marked by the centre","A supervised 5-hour practical task set by Pearson","Internally, through four short assignments, one per learning aim"],
+   answer:1,
+   explain:"Unit 16 is internal. The specification allows a maximum of two assignments: one for learning aim A, and one combining learning aims B and C."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A1 characteristics",
+   q:"A team leader creates a new shared workspace and adds 200 GB of storage through a web portal at 9pm, without contacting anyone at the provider. Which key characteristic is this?",
+   options:["Resource pooling","Measured service","On-demand self-service","Ubiquitous access"],
+   answer:2,
+   explain:"On-demand self-service means the customer provisions resources themselves, when they want, without human interaction with the provider."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A1 characteristics",
+   q:"Which statement best describes rapid elasticity?",
+   options:["Data is copied to several data centres for resilience","Capacity can be scaled up and released quickly, often automatically, to match demand","The provider charges only for what is used","Users can reach the service from any device with an internet connection"],
+   answer:1,
+   explain:"Elasticity is about scaling capacity up and down quickly. Option C is measured service; option D is ubiquitous access; option A is redundancy, which is a benefit but not one of the five characteristics."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A1 characteristics",
+   q:"A provider's physical servers in one data centre host the files of thousands of separate customers, with each customer's data isolated from the others. Which characteristic does this show?",
+   options:["Resource pooling","Rapid elasticity","On-demand self-service","Cloud bursting"],
+   answer:0,
+   explain:"Resource pooling: the provider's resources serve many customers (multi-tenancy) and are allocated dynamically. Virtualisation is the technology that makes it work."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A2 service models",
+   q:"Which of these is the clearest example of Platform as a Service (PaaS)?",
+   options:["Google Workspace","Renting a Windows Server virtual machine on Amazon EC2","Deploying your own web app code to Azure App Service, which manages the runtime and operating system","Buying a NAS drive for the office"],
+   answer:2,
+   explain:"PaaS gives you a managed platform: you bring code and data, the provider runs the OS and runtime. Google Workspace is SaaS; an EC2 virtual machine is IaaS; a NAS is on-premises."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A2 virtualisation",
+   q:"What is the link between virtualisation and cloud computing?",
+   options:["Virtualisation is a type of SaaS","A hypervisor lets one physical server run many isolated virtual machines, which enables resource pooling and elasticity","Virtualisation is only used in private clouds","Virtualisation removes the need for physical data centres"],
+   answer:1,
+   explain:"Without virtualisation, providers could not split hardware between tenants or spin capacity up in seconds. It underpins IaaS directly and PaaS and SaaS indirectly."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A2 key terms",
+   q:"A university runs its student records system in its own private cloud. During clearing week, extra demand automatically overflows to a public cloud provider. What is this called?",
+   options:["Multi-tenancy","Just-in-time service","Cloud bursting","Chargeback"],
+   answer:2,
+   explain:"Cloud bursting: a private (or on-premises) environment bursts into public cloud capacity when it reaches its limit. It is a typical use of a hybrid delivery model."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A2 delivery models",
+   q:"Five neighbouring councils share one cloud platform that is built to meet public-sector security requirements and is closed to other customers. Which delivery model is this?",
+   options:["Public","Private","Hybrid","Community"],
+   answer:3,
+   explain:"A community cloud is shared by several organisations with common concerns (security, compliance, mission), but is not open to the general public."},
+  {type:"mcq", area:"A", ao:"A.M1", ref:"Learning aim A · A4 cost",
+   q:"The finance team at a college is billed internally each month for the exact cloud storage its staff used. What is this practice called?",
+   options:["Pay-as-you-grow","Chargeback","Capital expenditure","Measured elasticity"],
+   answer:1,
+   explain:"Chargeback allocates cloud costs back to the departments that used them. It depends on measured service. Pay-as-you-grow describes how the organisation as a whole pays the provider."},
+  {type:"mcq", area:"A", ao:"A.P1", ref:"Learning aim A · A3 requirements",
+   q:"Which requirement is a cloud service least able to meet on its own?",
+   options:["Letting staff share documents between two offices","Running real-time control of CNC machines on a factory floor","Backing up email off-site","Providing video calls for remote workers"],
+   answer:1,
+   explain:"The specification names manufacturing as an example of requirements cloud cannot meet. Real-time machine control needs local, low-latency systems that keep running if the internet link fails."},
+  {type:"mcq", area:"A", ao:"A.P2", ref:"Learning aim A · A5 legislation",
+   q:"A former employee uses a colleague's saved password to log in to the company's cloud drive and download files. Which Act is most directly broken?",
+   options:["Copyright, Designs and Patents Act 1988","Computer Misuse Act 1990","Fraud Act 2006","Data (Use and Access) Act 2025"],
+   answer:1,
+   explain:"Unauthorised access to computer material is the first Computer Misuse Act offence. If the files contain personal data, the organisation may also have UK GDPR duties, but the offence by the individual is under the CMA."},
+  {type:"mcq", area:"C", ao:"C.P5", ref:"Learning aim C · C1 testing",
+   q:"You push 150 simultaneous uploads of 1 GB files at a shared folder to find the point where the service fails. Which type of test is this?",
+   options:["Functional testing","User testing","Stress testing","Security testing"],
+   answer:2,
+   explain:"Stress testing goes beyond normal load to find the breaking point. Performance testing checks speed under expected load; functional testing checks features work as specified."},
+  {type:"mcq", area:"B", ao:"B.P4", ref:"Learning aim B · B3 user management",
+   q:"Which of these is part of user management in B3?",
+   options:["Installing a browser plug-in","Choosing a guest OS image","Setting a 50 GB storage quota for each designer","Allocating host RAM to a virtual instance"],
+   answer:2,
+   explain:"B3 user management covers new users, passwords, storage quotas, privileges and access rights. Plug-ins are cloud clients; OS images and host resource allocation are platform tasks."},
+  {type:"mcq", area:"C", ao:"C.P6", ref:"Learning aim C · C2 reviewing",
+   q:"After a fortnight, the client says staff on old iPads cannot open the new collaboration app. Which C2 review area does this fall under?",
+   options:["Hardware developments","Compatibility of operating systems and browsers or plug-ins","Security breaches","Stress testing"],
+   answer:1,
+   explain:"Compatibility with operating systems, browsers and plug-ins is a named C2 area. The fix might be a minimum OS version, or a browser-based fallback."}
+  ]
+},
+
+/* ========================= LEVEL 2 ========================= */
+{
+  id:"L2", name:"Level 2", colour:"var(--l2)",
+  title:"Level 2 · Classify and Connect",
+  blurb:"Sort, match and connect. Can you tell the five characteristics apart in real situations, place products in the right service model, pick the right delivery model and apply the right law? Each item is one mark.",
+  meta:["Learning aims A–C","1 mark per item"],
+  recap:[
+    {h:"Shared responsibility",
+     b:"<p>Whatever the service model, the customer is always responsible for its <span class='kw'>data, user accounts and access settings</span>. The higher up the stack you buy, the more the provider manages.</p><table class='matrix'><tr><th>Layer</th><th>On-premises</th><th>IaaS</th><th>PaaS</th><th>SaaS</th></tr><tr><td>Data, users, access</td><td>You</td><td>You</td><td>You</td><td>You</td></tr><tr><td>Application</td><td>You</td><td>You</td><td>You</td><td>Provider</td></tr><tr><td>Runtime and middleware</td><td>You</td><td>You</td><td>Provider</td><td>Provider</td></tr><tr><td>Guest operating system</td><td>You</td><td>You</td><td>Provider</td><td>Provider</td></tr><tr><td>Virtualisation, servers, storage, network</td><td>You</td><td>Provider</td><td>Provider</td><td>Provider</td></tr><tr><td>Physical data centre</td><td>You</td><td>Provider</td><td>Provider</td><td>Provider</td></tr></table>"},
+    {h:"Choosing a delivery model",
+     b:"<ul><li><span class='kw'>Public</span>: lowest entry cost, fastest to start, most elastic, least control.</li><li><span class='kw'>Private</span>: most control and customisation, highest cost; suits strict regulation or legacy systems.</li><li><span class='kw'>Hybrid</span>: sensitive or latency-critical work stays private, everything else goes public; supports cloud bursting.</li><li><span class='kw'>Community</span>: shared cost between organisations with the same compliance needs.</li></ul>"},
+    {h:"The law in one line each",
+     b:"<ul><li><span class='kw'>DPA 2018 / UK GDPR</span>: process personal data lawfully and securely; restricted transfers outside the UK need adequacy or safeguards; report qualifying breaches to the ICO within 72 hours.</li><li><span class='kw'>Computer Misuse Act 1990</span>: unauthorised access; access with intent; unauthorised acts that impair a computer.</li><li><span class='kw'>Copyright, Designs and Patents Act 1988</span>: protects software, drawings and documents; software licences must be respected in the cloud too.</li><li><span class='kw'>Telecommunications lawful business practice</span>: businesses may monitor or record communications on their systems for legitimate reasons if users are told. The original 2000 Regulations were replaced in 2018 by regulations under the Investigatory Powers Act 2016.</li><li><span class='kw'>Fraud Act 2006</span>: false representation, failing to disclose, abuse of position.</li><li><span class='kw'>Contractual obligations</span>: the service level agreement (SLA) and terms decide uptime, liability, data location and exit.</li></ul>"}
+  ],
+  questions:[
+  {type:"classify", area:"A", ao:"A.P2", ref:"Learning aim A · A1 characteristics",
+   q:"Which key characteristic of cloud computing does each situation show?",
+   options:["On-demand self-service","Ubiquitous access","Resource pooling","Measured service","Rapid elasticity"],
+   items:[
+    {text:"A surveyor opens the latest drawing on a tablet from a building site in Gateshead", answer:"Ubiquitous access"},
+    {text:"The monthly invoice lists storage used in GB and the number of active licences", answer:"Measured service"},
+    {text:"An online retailer's servers double automatically on Black Friday, then shrink back", answer:"Rapid elasticity"},
+    {text:"The office manager adds three new user licences in the admin centre in two minutes", answer:"On-demand self-service"},
+    {text:"Thousands of small firms' mailboxes are hosted on the same physical servers", answer:"Resource pooling"},
+    {text:"A dashboard shows the design team used 1.2 TB this month and HR used 40 GB", answer:"Measured service"},
+    {text:"Extra virtual machines spin up within minutes when a render job starts", answer:"Rapid elasticity"},
+    {text:"Staff check their calendar on a phone, a home laptop and a library PC", answer:"Ubiquitous access"}],
+   explain:"Measured service is about metering and visibility of use; elasticity is about the capacity changing. A dashboard of usage per department is measured service, and is what makes chargeback possible."},
+  {type:"classify", area:"A", ao:"A.P2", ref:"Learning aim A · A2 service models",
+   q:"Classify each product or arrangement by service model.",
+   options:["SaaS","PaaS","IaaS"],
+   items:[
+    {text:"Microsoft 365 with Teams, SharePoint and OneDrive", answer:"SaaS"},
+    {text:"Amazon EC2 virtual machine running a Linux server you configure yourself", answer:"IaaS"},
+    {text:"Google App Engine running your own Python web app", answer:"PaaS"},
+    {text:"Dropbox Business shared folders", answer:"SaaS"},
+    {text:"Azure Virtual Machines with a self-installed Nextcloud server", answer:"IaaS"},
+    {text:"Azure App Service hosting your company intranet code", answer:"PaaS"},
+    {text:"Salesforce customer relationship management", answer:"SaaS"},
+    {text:"Amazon S3 raw object storage buckets used as a backup target", answer:"IaaS"}],
+   explain:"Ask who manages the operating system. If you do, it is IaaS. If the provider does but you deploy code, it is PaaS. If you just log in and use it, it is SaaS. Nextcloud is SaaS-like for its users, but installing it on a VM you manage makes the hosting IaaS."},
+  {type:"match", area:"A", ao:"A.M1", ref:"Learning aim A · A2 delivery models",
+   q:"Match each organisation to the delivery model that fits it best.",
+   options:["Public","Private","Hybrid","Community"],
+   items:[
+    {text:"A start-up with four staff and no IT budget that needs email and file sharing this week", answer:"Public"},
+    {text:"A bank that must keep its core ledger on infrastructure only it controls, under regulator scrutiny", answer:"Private"},
+    {text:"A manufacturer that keeps machine control on-site but moves email, HR and file sharing to Microsoft 365", answer:"Hybrid"},
+    {text:"A group of NHS trusts sharing a platform designed around health data rules", answer:"Community"},
+    {text:"An online ticket seller with a private cloud that bursts to a public provider when big concerts go on sale", answer:"Hybrid"},
+    {text:"Several multi-academy trusts jointly procuring a shared, education-only cloud platform", answer:"Community"}],
+   explain:"Cloud bursting is a hybrid pattern. Community clouds are defined by shared concerns among a closed group, not just by sharing."},
+  {type:"match", area:"A", ao:"A.P2", ref:"Learning aim A · A5 legislation",
+   q:"Match each situation to the legislation that most directly applies.",
+   options:["Data Protection Act 2018 / UK GDPR","Computer Misuse Act 1990","Copyright, Designs and Patents Act 1988","Telecommunications lawful business practice / interception rules","Fraud Act 2006"],
+   items:[
+    {text:"A firm moves client records to a provider whose data centre is outside the UK without checking the transfer rules", answer:"Data Protection Act 2018 / UK GDPR"},
+    {text:"An employee installs 20 copies of design software on cloud desktops using one single-user licence", answer:"Copyright, Designs and Patents Act 1988"},
+    {text:"A student guesses an administrator's password and changes everyone's storage quotas", answer:"Computer Misuse Act 1990"},
+    {text:"A company records and reviews staff Teams chats without having told staff it might do so", answer:"Telecommunications lawful business practice / interception rules"},
+    {text:"Someone emails customers pretending to be the cloud provider to take payment for a fake storage upgrade", answer:"Fraud Act 2006"},
+    {text:"A shared cloud folder of patient letters is accidentally made public, and nobody reports it", answer:"Data Protection Act 2018 / UK GDPR"}],
+   explain:"The specification names telecommunications regulations covering lawful business practice and interception. In the UK, the 2000 Lawful Business Practice Regulations were replaced in 2018 by regulations under the Investigatory Powers Act 2016, but the principle that staff must be told about monitoring is the same."},
+  {type:"classify", area:"A", ao:"A.M1", ref:"Learning aim A · A1/A4 benefits and drawbacks",
+   q:"Is each point a benefit or a drawback of cloud adoption for an organisation like Harbour & Lane?",
+   options:["Benefit","Drawback"],
+   items:[
+    {text:"No up-front capital cost for a replacement file server", answer:"Benefit"},
+    {text:"If broadband fails in Durham, staff there lose access to live files", answer:"Drawback"},
+    {text:"Automatic off-site copies replace the nightly USB backup", answer:"Benefit"},
+    {text:"Upload of a 2 GB drawing on a 10 Mbps upstream link takes nearly half an hour", answer:"Drawback"},
+    {text:"Surveyors can open drawings on site rather than printing them", answer:"Benefit"},
+    {text:"Monthly subscription costs continue for as long as the service is used", answer:"Drawback"},
+    {text:"The provider patches the platform, reducing reliance on a monthly contractor visit", answer:"Benefit"},
+    {text:"Staff need training and some will resist changing how they save work", answer:"Drawback"}],
+   explain:"At 10 Mbps upstream, 2 GB (about 16,000 megabits) takes around 1,600 seconds, so roughly 27 minutes. Quantifying a drawback like this is the kind of precise detail that lifts A.M1 and A.D1."},
+  {type:"classify", area:"C", ao:"C.P5", ref:"Learning aim C · C1 testing",
+   q:"Which type of test is each one?",
+   options:["Functional","User","Performance","Stress","Security"],
+   items:[
+    {text:"Check that a file shared with view-only rights cannot be edited by the recipient", answer:"Security"},
+    {text:"Time how long a 500 MB file takes to sync from Durham under normal working conditions", answer:"Performance"},
+    {text:"Ask three designers to complete a set task and record where they got stuck", answer:"User"},
+    {text:"Check that the version history restores the copy from yesterday afternoon", answer:"Functional"},
+    {text:"Simulate all 38 staff uploading at once at 5pm on a Friday", answer:"Stress"},
+    {text:"Attempt to sign in from a new device without completing multi-factor authentication", answer:"Security"},
+    {text:"Check that creating a new project folder applies the correct template sub-folders", answer:"Functional"}],
+   explain:"Permissions tests can be argued as functional, but because they check that access controls stop the wrong person, they belong under security. Always state the expected result before running any test."},
+  {type:"match", area:"A", ao:"A.D1", ref:"Learning aim A · A4 dispute resolution",
+   q:"Match each description to the dispute resolution approach.",
+   options:["Statutory (court or regulator)","Mediation (voluntary)","Arbitration (binding)","Escalation path"],
+   items:[
+    {text:"A neutral third party helps both sides reach an agreement, but either can walk away", answer:"Mediation (voluntary)"},
+    {text:"An independent arbitrator hears both sides and both are bound by the decision", answer:"Arbitration (binding)"},
+    {text:"The contract sets out that a complaint goes to account manager, then service director, then board level", answer:"Escalation path"},
+    {text:"The customer takes the provider to court for breach of contract, or complains to the ICO", answer:"Statutory (court or regulator)"}],
+   explain:"Contracts usually set an escalation path first, then mediation or arbitration, with the courts as a last resort. Which country's courts apply is itself a jurisdiction question."},
+  {type:"multi", area:"B", ao:"B.P4", ref:"Learning aim B · B3 development", marks:4,
+   q:"Which FOUR of these are user management tasks listed in B3? Select all that apply.",
+   options:["Creating accounts for new users","Choosing the guest OS image","Setting storage quotas","Installing the mobile app on staff phones","Setting privileges and access rights","Enforcing a password policy","Allocating host CPU to a virtual instance"],
+   answers:[0,2,4,5],
+   explain:"Guest OS images and host resource allocation are platform tasks; the mobile app is a cloud client. User management is accounts, passwords, quotas, privileges and access rights. A wrong selection cancels a correct one."}
+  ]
+},
+
+/* ========================= LEVEL 3 ========================= */
+{
+  id:"L3", name:"Level 3", colour:"var(--l3)",
+  title:"Level 3 · Apply to a Scenario",
+  blurb:"Short written answers about one organisation. Every point must be tied to Harbour & Lane: a generic textbook answer earns very little here. This is the level of detail A.P1 and A.P2 need.",
+  meta:["A.P1 · A.P2 · B.P3 · B.P4","3–4 marks per question","Self-marked"],
+  recap:[
+    {h:"The scenario",b:SCEN},
+    {h:"Explain means link",
+     b:"<p>An explanation has two halves: <span class='kw'>the point</span> and <span class='kw'>why it matters here</span>. Use connectives such as <em>which means</em>, <em>so</em>, <em>because</em>. A strong pattern: feature → how it works → effect on this organisation's staff, clients or costs.</p>"}
+  ],
+  questions:[
+  {type:"written", area:"A", ao:"A.P1", ref:"Learning aim A · A3 current IT", marks:4, scenario:SCEN,
+   q:"Explain how IT is currently deployed at Harbour & Lane, and two ways in which it does not meet the practice's needs.",
+   teach:"A.P1 asks you to explain current deployment <b>and</b> how well it meets needs. Describe the hardware, software, connectivity and support, then judge them against what staff actually have to do.",
+   model:["Harbour & Lane runs a traditional on-premises setup: one Windows Server 2016 file server in Newcastle holds all project files, an on-premises Exchange 2016 server handles email, Durham staff reach files over a VPN, and support comes from the office manager plus a monthly contractor visit.",
+          "First, it does not support collaboration between sites or with surveyors. Durham staff working on 2 GB drawings over a slow VPN wait a long time to open and save files, and surveyors on site cannot see the current version, so they risk working from outdated drawings, which wastes time and could cause costly mistakes on a build.",
+          "Second, the single server and USB backup are a resilience and security risk. If the cupboard server fails or the building floods, there is no automatic off-site copy beyond a USB stick in someone's house, which could be lost, unencrypted or a day out of date. Exchange 2016 reached the end of extended support in October 2025 and Windows Server 2016 follows in January 2027, so security patches stop, increasing the risk of a breach involving client personal data."],
+   criteria:["Accurately described the current deployment (server, email, VPN, support)","Explained a collaboration or access weakness, linked to sites, surveyors or file size","Explained a resilience, backup or security weakness, linked to the single server or USB backup","Linked a weakness to an impact on the business (time, cost, risk to clients or data)"]},
+  {type:"written", area:"A", ao:"A.P2", ref:"Learning aim A · A1 characteristics", marks:4, scenario:SCEN,
+   q:"Explain two key characteristics of cloud computing that would benefit Harbour & Lane.",
+   model:["Ubiquitous access would let surveyors open the current drawings on their tablets on site, and Durham staff work on the same files as Newcastle, without a VPN. This means everyone works from one version of the truth, reducing errors caused by out-of-date drawings and saving the time currently spent printing or emailing files.",
+          "Rapid elasticity and on-demand self-service would let the office manager add storage or licences in minutes when the practice wins a large project or takes on contractors, and remove them afterwards. This means the practice no longer has to buy a bigger server in advance for peak demand, and pays only for what it uses, which addresses the partners' concerns about cost."],
+   criteria:["Named a valid characteristic accurately","Explained how it would benefit Harbour & Lane specifically","Named a second valid characteristic accurately","Explained how the second characteristic would benefit Harbour & Lane specifically"]},
+  {type:"written", area:"A", ao:"A.P2", ref:"Learning aim A · A2 service models", marks:3, scenario:SCEN,
+   q:"Explain why a SaaS collaboration platform is likely to suit Harbour & Lane better than building its own solution on IaaS.",
+   model:["With SaaS such as Microsoft 365 or Google Workspace, the provider manages the servers, operating system, application updates and security patching, whereas with IaaS the practice would have to install, patch and secure the guest operating system and the collaboration software itself.",
+          "Harbour & Lane has no in-house IT specialist, only an office manager and a monthly contractor, so it does not have the skills or time to run IaaS virtual machines safely. An unpatched self-managed server is exactly the weakness it is trying to leave behind.",
+          "SaaS also has a predictable per-user monthly price, includes email (replacing Exchange 2016) and has accessible clients that work with screen readers, which supports the visually impaired designer. IaaS would only make sense if the practice needed software that SaaS cannot provide."],
+   criteria:["Explained the difference in who manages what (shared responsibility)","Linked the choice to Harbour & Lane's limited IT skills or support","Gave a further justified reason (cost, email replacement, accessibility, speed of deployment)"]},
+  {type:"written", area:"A", ao:"A.P1", ref:"Learning aim A · A3 IT requirements", marks:3, scenario:SCEN,
+   q:"Identify and explain three IT requirements that a consultant must investigate before recommending a cloud solution to Harbour & Lane.",
+   model:["Staff working patterns and location: surveyors work on site two or three days a week and six staff work part-time or compressed hours, so the solution must offer reliable mobile and offline access, and support for sharing work at handover times.",
+          "Staff accessibility needs: one designer uses a screen reader, so the consultant must check that the web and desktop clients meet accessibility standards and work with that assistive software. Choosing an inaccessible tool could also breach the Equality Act 2010.",
+          "Legal and ethical requirements: the practice holds client personal data, so the consultant must check where the provider stores data, whether any transfer outside the UK is a restricted transfer under UK GDPR, and whether the CAD software licence allows cloud or remote use."],
+   criteria:["Explained a staff working pattern or location requirement linked to the scenario","Explained an accessibility requirement linked to the screen reader user","Explained a legal or ethical requirement (data location, licensing, privacy) linked to the scenario"]},
+  {type:"written", area:"A", ao:"A.M1", ref:"Learning aim A · A4 constraints", marks:3, scenario:SCEN,
+   q:"Explain how bandwidth could constrain cloud adoption at the Durham office, and suggest one way to reduce the problem.",
+   teach:"Show the arithmetic. Megabits per second (Mb) is not the same as megabytes (MB): 1 byte is 8 bits. 2 GB is about 16,000 megabits.",
+   model:["Durham has only 10 Mbps upload. A 2 GB drawing is about 16,000 megabits, so uploading it takes roughly 1,600 seconds, which is around 27 minutes, and the link is shared with every other user in the office. If several designers save large files at once, the connection will saturate and video calls and other work will slow down.",
+          "The practice could use a sync client with differential sync, which uploads only the changed blocks of a file rather than the whole file each time, and schedule large initial uploads overnight.",
+          "It could also upgrade Durham to a full-fibre business connection with symmetric speeds, and add a 4G or 5G backup link so that the office is not cut off if the main line fails."],
+   criteria:["Identified the low upstream bandwidth as the constraint","Quantified or clearly explained the effect on large CAD files and shared users","Suggested a realistic, justified mitigation"]},
+  {type:"written", area:"B", ao:"B.P4", ref:"Learning aim B · B3 user management", marks:4, scenario:SCEN,
+   q:"Explain how you would set up user management in the new collaboration solution for Harbour & Lane.",
+   model:["I would create groups by role (Partners, Designers, Surveyors, Admin, External clients) and assign access rights to groups rather than individuals, so that adding a new starter takes one step and permissions stay consistent.",
+          "Privileges would follow least privilege: only the office manager and the external contractor would hold administrator rights, with separate admin accounts; designers would have edit rights to project sites; clients would get view-only guest access to a single project folder, with links that expire.",
+          "I would set storage quotas per user for personal space (for example 100 GB) with shared project libraries holding the large CAD files, so storage use can be monitored and planned.",
+          "Passwords would follow NCSC guidance: long passphrases rather than forced frequent changes, with multi-factor authentication required for every account, especially admins and anyone signing in from site tablets."],
+   criteria:["Used role-based groups for access rights","Applied least privilege, including separate or limited admin accounts","Set storage quotas in a way suited to the scenario","Specified a password and MFA policy"]}
+  ]
+},
+
+/* ========================= LEVEL 4 ========================= */
+{
+  id:"L4", name:"Level 4", colour:"var(--l4)",
+  title:"Level 4 · Analyse",
+  blurb:"Six-mark answers that weigh things up. Compare options point by point, use real evidence and reach a conclusion. This is the Merit (A.M1) and early Distinction (A.D1) standard.",
+  meta:["A.M1 · A.D1","6 marks per question","Self-marked"],
+  recap:[
+    {h:"Compare versus analyse",
+     b:"<p><span class='kw'>Compare (Merit)</span>: set out the similarities and differences between options, point by point. The guidance says this may be unbalanced. <span class='kw'>Analyse (Distinction)</span>: break each impact into its causes and effects, show how factors interact, weigh benefits against drawbacks for this specific organisation, and justify why one option is preferable.</p>"},
+    {h:"Real cases to draw on",
+     b:"<ul><li><span class='kw'>AWS, 20 October 2025</span>: a 14-hour outage in the US-East-1 region disrupted services worldwide; in the UK, Lloyds Banking Group brands and HMRC were affected.</li><li><span class='kw'>Azure Front Door, 29 October 2025</span>: a faulty configuration change caused around eight hours of disruption, including to Microsoft 365.</li><li><span class='kw'>OVHcloud, March 2021</span>: a fire at the Strasbourg campus destroyed one data centre; about 65,000 customers were affected and some lost data permanently because their backups were on the same site.</li><li><span class='kw'>Microsoft France, June 2025</span>: under oath to a French Senate inquiry, Microsoft's legal director said he could not guarantee that EU-hosted data would never be handed to US authorities.</li><li><span class='kw'>CMA, July 2025</span>: the UK competition regulator found AWS and Microsoft each held 30–40% of UK IaaS supply, with egress fees and licensing making it harder to switch provider.</li></ul>"}
+  ],
+  questions:[
+  {type:"written", area:"A", ao:"A.M1", ref:"Learning aim A · A2 delivery models", marks:6, scenario:SCEN,
+   q:"Compare a fully public cloud solution with a hybrid solution for Harbour & Lane.",
+   model:["Both options would replace the cupboard file server for day-to-day collaboration and give surveyors and Durham staff ubiquitous access. In a fully public solution, all files and email move to a SaaS platform such as Microsoft 365; in a hybrid solution, current projects move to the cloud but a local server or NAS in Newcastle keeps a synchronised copy of large CAD files and archived projects.",
+          "On cost, public cloud has the lowest up-front cost and a predictable per-user subscription, whereas hybrid keeps some capital spending on local hardware and its maintenance, so it costs more overall but may reduce subscription storage charges for the 2 GB files.",
+          "On performance, hybrid gives Newcastle designers LAN-speed access to big files and protects them from a broadband outage, whereas public cloud makes every user dependent on upload speed, which is a real problem for Durham's 10 Mbps link.",
+          "On management and security, public cloud is simpler: the provider patches everything and there is one system to secure. Hybrid needs someone to look after the local server and the sync between the two, which the practice's thin IT support may struggle with, so the local server could again become the unpatched weak point.",
+          "Overall, public cloud fits the practice's lack of IT staff and its cost concerns better, while hybrid fits its large-file and resilience concerns better."],
+   criteria:["Set out what each option would look like for the practice","Compared on cost, with a clear difference","Compared on performance or bandwidth, with a clear difference","Compared on management, skills or security, with a clear difference","Used scenario detail (Durham link, file sizes, IT support) throughout","Summarised which needs each option meets best"]},
+  {type:"written", area:"A", ao:"A.D1", ref:"Learning aim A · A4 impact and risk", marks:6,
+   scenario:"<p>On 20 October 2025, Amazon Web Services' US-East-1 region in Northern Virginia suffered an outage that lasted around 14 hours. It began with DNS problems affecting the DynamoDB database service and spread to EC2 virtual machines and network load balancers. In the UK, Lloyds, Halifax and Bank of Scotland customers, HMRC and many apps such as Snapchat, Signal, Slack and Ring doorbells were disrupted.</p>",
+   q:"Analyse what the October 2025 AWS outage shows about the risks for organisations that depend on a third-party cloud provider, and how those risks can be reduced.",
+   model:["The outage shows that resource pooling creates concentration risk. Thousands of organisations shared the same region and the same internal services, so one fault in DNS for a single database service cascaded into failures for banks, a government department and consumer apps at the same moment. The efficiency that makes public cloud cheap is the same thing that turns one fault into a mass outage.",
+          "It also shows that organisations lose control when the provider owns the infrastructure. A UK bank cannot repair a data centre in Virginia; it can only wait, communicate with customers and absorb reputational damage. Many UK-facing services had dependencies on a US region that their own customers would never have known about, which is a hidden risk in the architecture.",
+          "The impact is not equal for all organisations. A small firm using Microsoft 365 for files was barely affected, whereas services that built everything in one AWS region were offline for most of a working day. So the risk depends on design choices, not just on using cloud.",
+          "The risks can be reduced through multi-region or multi-zone design, so that if one region fails traffic moves to another; through reading the SLA to understand what compensation applies (usually service credits, not lost revenue); through keeping offline or alternative ways to work, such as cached files and a business continuity plan; and through testing failover regularly.",
+          "Regulators are also responding: commentators asked why AWS had not yet been brought into HM Treasury's critical third parties regime for financial services. On balance, the outage does not mean cloud is less reliable than on-premises, since single-site systems fail too, but it shows that resilience has to be designed in and cannot be assumed just because a large provider is used."],
+   criteria:["Explained concentration risk or shared dependency (resource pooling, single region)","Analysed loss of control or third-party ownership","Showed that impact varied with how systems were designed","Proposed specific mitigations (multi-region, SLA, continuity plan, failover testing)","Used specific evidence from the case","Reached a balanced, supported judgement"]},
+  {type:"written", area:"A", ao:"A.D1", ref:"Learning aim A · A4/A5 jurisdiction", marks:6,
+   scenario:"<p>In June 2025, Microsoft France's director of public and legal affairs told a French Senate inquiry, under oath, that he could not guarantee that data held in Microsoft's EU data centres would never be handed to US authorities. US-based providers are subject to the US CLOUD Act 2018, which lets US law enforcement require them to produce data they control, wherever it is stored. Since October 2023, the UK Extension to the EU-US Data Privacy Framework has allowed transfers of personal data to certified US organisations.</p>",
+   q:"Analyse the legal ownership and jurisdiction issues that a UK organisation should consider before storing client personal data with a US-owned cloud provider.",
+   model:["Geographic location of data matters but does not settle the question. Choosing a UK data centre region means personal data is not routinely leaving the UK, which keeps day-to-day processing within UK GDPR. However, the provider's nationality creates a second layer of jurisdiction: as the Microsoft France testimony shows, a US-owned provider can be compelled under the CLOUD Act to produce data it controls even if that data sits in Europe or the UK.",
+          "Cross-border movement must be checked. If any personal data is sent to, or can be accessed from, the US, for example by support staff or for backup, it may be a restricted transfer under UK GDPR. The organisation must rely on adequacy regulations, such as the UK Extension for certified US organisations, or on appropriate safeguards such as the International Data Transfer Agreement, and must document this.",
+          "Legal ownership of the data must be explicit in the contract. The organisation remains the controller and is accountable to the ICO even when the provider is the processor. The contract should confirm that the customer owns its data, set out how the provider may use it, and cover breach notification so that the organisation can meet the 72-hour ICO reporting window.",
+          "Procedures when the agreement ends must be agreed in advance: how data will be exported, in what format, at what cost, and when the provider will securely delete its copies. The CMA found that egress fees made switching harder in the UK, so exit costs are a real consideration.",
+          "Dispute resolution and multiple jurisdictions interact. If the contract is governed by US or Irish law, a UK customer may have to resolve disputes in another legal system, so the escalation path and any arbitration clause matter.",
+          "On balance, for most UK businesses the risk of government access is low and manageable with UK regions, encryption and correct transfer paperwork, but for highly sensitive data some organisations will choose UK-owned or sovereign providers, or hold their own encryption keys."],
+   criteria:["Explained data location and its UK GDPR implications","Analysed the effect of the provider's nationality (CLOUD Act, Microsoft testimony)","Explained restricted transfers and a valid transfer mechanism","Covered contractual ownership, controller and processor roles, or breach notification","Covered procedures when the agreement ends, or dispute resolution and jurisdiction","Reached a balanced, justified judgement"]},
+  {type:"written", area:"A", ao:"A.M1", ref:"Learning aim A · A4 cost", marks:6, scenario:SCEN,
+   q:"Analyse the cost implications for Harbour & Lane of moving to a pay-as-you-grow cloud model rather than replacing its server.",
+   model:["Replacing the server is capital expenditure: a new server, licences, a backup device and installation would be paid up front, then depreciate over about five years. Pay-as-you-grow turns this into operating expenditure: a monthly per-user subscription plus any extra storage, which improves cash flow because there is no large one-off bill.",
+          "Pay-as-you-grow scales with the business. If the practice takes on five contractors for a big project, it adds five licences for those months and removes them afterwards, whereas a server must be sized for the biggest expected workload from day one, so the practice pays for capacity it does not use most of the time.",
+          "However, subscriptions never end. Over five or more years, the total cost of ownership of the cloud option can exceed that of a server, especially if large CAD archives push the practice into extra storage tiers. The partners should compare five-year totals, not just monthly bills.",
+          "There are hidden savings too: the contractor's monthly visits can focus on support rather than patching, the USB backup routine disappears, and Exchange no longer needs replacing, which is a cost avoided rather than a cost saved.",
+          "Measured service would also allow chargeback, so project budgets could carry their own storage costs. That makes the cost of large projects visible to the partners.",
+          "On balance, pay-as-you-grow suits a 38-person practice with uneven workloads and limited IT staff, provided storage is managed through quotas and archiving policies so costs do not creep upwards."],
+   criteria:["Explained the capital versus operating expenditure difference","Analysed scaling with demand (contractors, projects)","Recognised the long-term subscription and total cost of ownership drawback","Identified hidden or avoided costs (patching, backup, Exchange replacement)","Linked measured service to chargeback or cost visibility","Reached a justified conclusion with conditions"]}
+  ]
+},
+
+/* ========================= LEVEL 5 ========================= */
+{
+  id:"L5", name:"Level 5", colour:"var(--l5)",
+  title:"Level 5 · Plan, Manage and Evaluate — Distinction Standard",
+  blurb:"Extended answers at the standard of A.D1, B.M2, C.M3, BC.D2 and BC.D3. Analyse, justify, optimise and evaluate, with your own judgement supported by evidence throughout.",
+  meta:["A.D1 · B.M2 · C.M3 · BC.D2 · BC.D3","8–10 marks per question","Self-marked"],
+  recap:[
+    {h:"What Distinction looks like in Unit 16",
+     b:"<ul><li><span class='kw'>A.D1</span>: a clear, balanced analysis of different cloud technologies for the organisation, with a justified reason why one solution is preferable.</li><li><span class='kw'>B.M2</span>: justify planning and implementation decisions, including risks, showing why they make an effective solution.</li><li><span class='kw'>C.M3</span>: optimise the solution, by improving security, performance or features, or applying upgrades, with evidence of before and after.</li><li><span class='kw'>BC.D2</span>: evaluate the plan and the optimised solution against the client's needs, including alternatives.</li><li><span class='kw'>BC.D3</span>: show individual responsibility, creativity and self-management, with tangible evidence such as meeting notes, time plans and logs.</li></ul>"},
+    {h:"Evidence the assessor will look for",
+     b:"<p>Signed meeting notes and client feedback (B2) · design specification versions · a risk register · build screenshots and configuration records (B3) · a test plan with expected and actual results (C1) · a management log covering at least two weeks · a before-and-after record of each optimisation · a presentation to the client (C4) · a reflective review of your own skills (C5).</p>"}
+  ],
+  questions:[
+  {type:"written", area:"A", ao:"A.D1", ref:"Learning aim A · A1–A5 analysis", marks:10, scenario:SCEN,
+   q:"Analyse the impact that different cloud technologies would have on Harbour & Lane, and justify which solution is preferable.",
+   bullets:["Consider at least two service or delivery models","Cover impact on individuals and on the organisation","Include cost, security, legal and implementation factors","Reach a justified recommendation"],
+   model:["Option 1 is a public SaaS platform such as Microsoft 365 or Google Workspace. Option 2 is a hybrid: SaaS for email and collaboration, plus a local NAS that syncs large CAD files. Option 3 is IaaS: the practice runs its own Nextcloud server on a cloud virtual machine.",
+          "Impact on individuals: all three give surveyors ubiquitous access on site, which removes the risk of working from outdated drawings and the time spent printing. SaaS gives the best experience for part-time and remote staff because the clients are polished, have offline sync and include accessibility features such as screen reader support, which directly helps the visually impaired designer. IaaS-hosted Nextcloud is flexible but accessibility and mobile apps vary, and staff would need more training. All options create a new risk for individuals: if they lose connection, they lose access to anything not synced locally.",
+          "Impact on the organisation's costs: SaaS and IaaS both remove the capital cost of a new server, but IaaS adds hidden costs in skilled administration, because someone must patch and secure the guest OS and the application. For a practice with no in-house IT specialist, that cost is either paid to the contractor or ignored, and ignoring it recreates today's unpatched-server risk. Hybrid has the highest cost because it keeps local hardware as well as subscriptions.",
+          "Security and backup: SaaS moves patching and physical security to a provider that holds recognised certifications, while the practice remains responsible for users, MFA and sharing settings. This is a big improvement on a single cupboard server and a USB backup. However, the OVHcloud fire shows that the provider's own redundancy is not a backup strategy, so a separate third-party backup of the SaaS tenant is still advisable.",
+          "Legal and jurisdiction: client personal data should stay in a UK region. With a US-owned provider, the CLOUD Act and the Microsoft France testimony mean government access cannot be ruled out entirely, but for an architecture firm's client contact data the risk is low and can be managed through the UK Extension and the provider's data processing terms. The CAD licence must be checked to confirm cloud storage of drawings is permitted.",
+          "Implementation and constraints: Durham's 10 Mbps upload is the biggest constraint for options 1 and 3. Migration of 2 TB of archived projects would take days over that link, so a staged migration, differential sync and a fibre upgrade are needed whichever option is chosen. Hybrid reduces day-to-day bandwidth demand in Newcastle but not in Durham.",
+          "Judgement: Option 1, public SaaS, is preferable because it best matches the practice's real constraint, which is lack of IT skills rather than lack of money. It replaces the ageing Exchange server, gives accessible collaboration to every group of staff and moves patching to the provider. Hybrid would be justified only if testing showed that large-file performance was unacceptable after a broadband upgrade. IaaS should be rejected because it reintroduces the management burden the practice is trying to remove. The recommendation should be conditional on a fibre upgrade for Durham, MFA for all accounts and a separate backup of the tenant."],
+   criteria:["Defined at least two distinct cloud options clearly","Analysed impact on individuals, including accessibility, flexibility and risk","Analysed impact on organisational cost, including hidden or skills costs","Analysed security and backup, including shared responsibility","Analysed legal ownership, jurisdiction or licensing","Analysed implementation constraints such as bandwidth and migration","Used real evidence or quantified detail","Balanced benefits and drawbacks of each option","Reached a clear recommendation","Justified the recommendation against alternatives with conditions"]},
+  {type:"written", area:"B", ao:"B.P3 / B.M2", ref:"Learning aim B · B1 planning and risks", marks:8, scenario:SCEN,
+   q:"Outline the key parts of a plan for Harbour & Lane's cloud storage and collaboration solution, including a risk assessment, and justify your main decisions.",
+   bullets:["Purpose, client requirements and user needs","Technical requirements and resources","At least three risks with likelihood, impact and mitigation","Justify why each decision gives an effective solution"],
+   model:["Purpose and requirements: to replace the file server and Exchange with a secure, accessible cloud platform so that all staff, including surveyors and Durham, work from one current set of drawings. Measurable requirements agreed with the partners: files available on site within 5 minutes of saving, MFA on all accounts, a daily off-platform backup, and accessibility verified by the screen reader user.",
+          "Technical plan: a SaaS tenant in a UK data region; SharePoint project sites or shared drives with a standard folder template; role-based groups (Partners, Designers, Surveyors, Admin, Guests); 100 GB personal quotas; sync clients on all PCs and the mobile app on surveyors' tablets; a fibre upgrade and 4G failover for Durham. I chose SaaS rather than IaaS because the client has no in-house administrator, so a platform patched by the provider reduces the main risk the practice faces today.",
+          "Risk 1: data loss during migration (likelihood medium, impact high). Mitigation: take a full verified copy of the file server first, migrate one project at a time, check file counts and hashes, and keep the old server read-only for 30 days.",
+          "Risk 2: account compromise through phishing (likelihood high, impact high). Mitigation: enforce MFA from day one, block legacy authentication, give short phishing training, and restrict external sharing to expiring view-only links.",
+          "Risk 3: poor performance in Durham (likelihood high, impact medium). Mitigation: fibre upgrade before go-live, differential sync, overnight initial upload, and performance testing against the 5-minute target.",
+          "Risk 4: staff resistance and low adoption (likelihood medium, impact medium). Mitigation: involve a champion in each team, run short role-based training, and set a collaboration protocol saying where files must be saved.",
+          "Legal and ethical: confirm a UK data region and the provider's data processing terms; update the privacy notice; check the CAD software licence allows cloud storage; tell staff that activity logs are monitored, as lawful business practice requires.",
+          "Justification: each decision is tied to a stated requirement, and the risks are ranked so that effort goes first to the high-impact risks to data and accounts. That makes the plan effective rather than just complete."],
+   criteria:["Stated purpose and measurable client requirements","Specified user needs, including roles, sites and accessibility","Specified technical requirements and resources","Assessed at least three relevant risks with likelihood and impact","Gave specific, realistic mitigations","Covered legal and ethical considerations","Justified key decisions against the client's needs","Showed how decisions combine into an effective solution"]},
+  {type:"written", area:"C", ao:"C.P5 / C.M3", ref:"Learning aim C · C1–C2 test, manage, optimise", marks:8, scenario:SCEN,
+   q:"Describe how you would test and manage Harbour & Lane's solution over the first two weeks, and explain two optimisations you might make as a result.",
+   model:["Functional tests: create a project from the template and confirm the sub-folders appear; restore yesterday's version of a drawing; confirm that a guest link expires after 7 days. For each test I record the expected result, the actual result, pass or fail, and any action taken.",
+          "User tests: three users, including the screen reader user and one surveyor on a tablet, complete scripted tasks such as finding the latest drawing and sharing it with a client. I record time taken and difficulties, and collect feedback through a short form.",
+          "Performance and stress tests: time a 500 MB sync from Durham at 10am and 5pm against the 5-minute target, then simulate many simultaneous uploads to see how the link and service behave under peak load.",
+          "Security tests: try signing in without MFA; check that a designer cannot open the HR library; run the provider's secure score or security review and record the baseline.",
+          "Management log: daily for two weeks I would check the admin centre for service health, failed sign-ins, storage used against quotas, sharing activity and pending updates, and record each check, issue and fix with the date. This is the evidence that I managed the solution, not just built it.",
+          "Optimisation 1, performance: if Durham syncs exceed the target, enable files-on-demand so only needed files download, and move the archive to a separate library that is not synced. I would re-run the same test to show the before-and-after times.",
+          "Optimisation 2, security: if the security review shows legacy sign-in protocols or unrestricted external sharing, block them and apply sensitivity labels to client folders, then re-run the security test and show the improved score.",
+          "Testing the same things before and after each change is what turns a change into evidenced optimisation for C.M3."],
+   criteria:["Planned functional tests with expected results","Planned user testing with real users including accessibility","Planned performance and/or stress tests linked to targets","Planned security tests","Described a structured management log over at least two weeks","Explained a justified optimisation with before and after evidence","Explained a second, different optimisation with before and after evidence","Linked testing and optimisation to the client's needs"]},
+  {type:"written", area:"C", ao:"BC.D2 / BC.D3", ref:"Learning aim C · C3–C5 evaluate and reflect", marks:8, scenario:SCEN,
+   q:"Evaluate how well an optimised SaaS solution meets Harbour & Lane's needs, and review your own skills and behaviours during the project.",
+   model:["Against the requirements: the 5-minute availability target was met in Newcastle, and met in Durham only after files-on-demand and the fibre upgrade, so the original plan underestimated bandwidth. MFA is enforced for all 38 accounts and the security review score improved after optimisation. The screen reader user completed all user-test tasks, but reported that the CAD preview pane was not accessible, which is a limitation of the viewer rather than the platform.",
+          "Efficiency and ease of use: surveyors no longer print drawings and report saving around an hour a week. Some part-time staff still save to their desktops, so adoption is incomplete and the collaboration protocol needs reinforcing.",
+          "Stability and updates: there were no outages in the management period, but the solution depends on a single provider; the separate tenant backup now means a provider-side failure would not cause permanent data loss. The provider's update schedule means features change without notice, so the office manager needs to read the change messages monthly.",
+          "Alternatives: a hybrid option would have given faster Newcastle access to large files but added a server to maintain; IaaS Nextcloud would have cost less in licences but more in skilled administration. The optimised SaaS solution remains the better fit because the practice's limiting factor is IT skills. Remaining improvements: archive projects older than three years to cheaper storage and review licences quarterly.",
+          "Own skills, BC.D3: I took individual responsibility by keeping a dated project log and leading three client meetings, with notes signed off by a partner. I showed creativity when the Durham performance problem appeared, testing files-on-demand rather than recommending an expensive hybrid immediately. My time management slipped in week two when migration took longer than planned; I responded by re-scheduling with the client and documenting the change. Next time I would run a bandwidth test during planning rather than during testing, and I would practise presenting technical findings in non-technical language, as partners asked for clarification twice during my presentation."],
+   criteria:["Evaluated against specific, measurable client requirements","Used evidence from testing and the management period","Identified limitations honestly, not just successes","Compared the solution with realistic alternatives","Recommended specific further improvements","Reflected on own responsibility with tangible evidence","Reflected on creativity, problem-solving or self-management with an example","Identified specific targets for own development"]}
+  ]
+}
+];
+
+
+
+
+/* ============================================================
+   RENDERING + SCORING
+   ============================================================ */
+const state = { level:0, answers:{}, checked:{}, selfmark:{} };
+
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!==undefined)e.innerHTML=h; return e;};
+const key = (li,qi)=>li+"_"+qi;
+
+function marksFor(q){
+  if(q.type==="mcq") return 1;
+  if(q.type==="multi") return q.marks||q.answers.length;
+  if(q.type==="classify"||q.type==="match") return q.items.length;
+  if(q.type==="written") return q.marks;
+  return 1;
+}
+function totalMarks(){
+  let t=0; DATA.forEach(l=>l.questions.forEach(q=>t+=marksFor(q))); return t;
+}
+function earnedFor(li,qi){
+  const q=DATA[li].questions[qi], k=key(li,qi);
+  if(q.type==="written") return state.selfmark[k]||0;
+  if(!state.checked[k]) return 0;
+  const a=state.answers[k];
+  if(q.type==="mcq") return a===q.answer?1:0;
+  if(q.type==="multi"){
+    const sel=a||[]; const right=sel.filter(i=>q.answers.includes(i)).length;
+    const wrong=sel.filter(i=>!q.answers.includes(i)).length;
+    return Math.max(0,right-wrong);
+  }
+  if(q.type==="classify"||q.type==="match"){
+    const sel=a||[]; let n=0;
+    q.items.forEach((it,i)=>{ if(sel[i]===it.answer) n++; });
+    return n;
+  }
+  return 0;
+}
+function earnedTotal(){
+  let t=0; DATA.forEach((l,li)=>l.questions.forEach((q,qi)=>t+=earnedFor(li,qi))); return t;
+}
+function levelTotals(li){
+  let e=0,m=0;
+  DATA[li].questions.forEach((q,qi)=>{ e+=earnedFor(li,qi); m+=marksFor(q); });
+  return {e,m};
+}
+function levelAttempted(li){
+  return DATA[li].questions.every((q,qi)=>{
+    const k=key(li,qi);
+    return q.type==="written" ? state.selfmark[k]!==undefined : state.checked[k];
+  });
+}
+
+function updateChip(){
+  const e=earnedTotal(), m=totalMarks();
+  document.getElementById("chip").textContent = e+" / "+m+" marks";
+  document.getElementById("bar").style.width = (m? (e/m*100):0)+"%";
+  document.querySelectorAll("#nav button").forEach((b,i)=>{
+    if(i<DATA.length){
+      const done=levelAttempted(i);
+      b.innerHTML = (done?'<span class="tick">✓</span> ':'')+DATA[i].name;
+    }
+  });
+}
+
+function buildNav(){
+  const nav=document.getElementById("nav"); nav.innerHTML="";
+  DATA.forEach((l,i)=>{
+    const b=el("button",null,l.name);
+    b.onclick=()=>{ state.level=i; render(); window.scrollTo(0,0); };
+    nav.appendChild(b);
+  });
+  const r=el("button",null,"Results");
+  r.onclick=()=>{ state.level=DATA.length; render(); window.scrollTo(0,0); };
+  nav.appendChild(r);
+}
+
+function setCurrentNav(){
+  document.querySelectorAll("#nav button").forEach((b,i)=>{
+    b.setAttribute("aria-current", i===state.level ? "true":"false");
+  });
+}
+
+/* ---------- question renderers ---------- */
+function renderMCQ(q,li,qi,wrap){
+  const k=key(li,qi), opts=el("div","opts");
+  q.options.forEach((o,i)=>{
+    const lab=el("label","opt");
+    const inp=el("input"); inp.type="radio"; inp.name=k; inp.value=i;
+    if(state.answers[k]===i) inp.checked=true;
+    if(state.checked[k]) inp.disabled=true;
+    inp.onchange=()=>{ state.answers[k]=i; };
+    lab.appendChild(inp); lab.appendChild(el("span",null,o));
+    if(state.checked[k]){
+      if(i===q.answer) lab.classList.add("correct");
+      else if(state.answers[k]===i) lab.classList.add("wrong");
+    }
+    opts.appendChild(lab);
+  });
+  wrap.appendChild(opts);
+}
+function renderMulti(q,li,qi,wrap){
+  const k=key(li,qi), opts=el("div","opts");
+  if(!state.answers[k]) state.answers[k]=[];
+  q.options.forEach((o,i)=>{
+    const lab=el("label","opt");
+    const inp=el("input"); inp.type="checkbox"; inp.value=i;
+    if(state.answers[k].includes(i)) inp.checked=true;
+    if(state.checked[k]) inp.disabled=true;
+    inp.onchange=()=>{
+      const arr=state.answers[k];
+      if(inp.checked){ if(!arr.includes(i))arr.push(i); }
+      else state.answers[k]=arr.filter(x=>x!==i);
+    };
+    lab.appendChild(inp); lab.appendChild(el("span",null,o));
+    if(state.checked[k]){
+      const sel=state.answers[k].includes(i), right=q.answers.includes(i);
+      if(sel&&right) lab.classList.add("correct");
+      else if(sel&&!right) lab.classList.add("wrong");
+      else if(!sel&&right) lab.classList.add("missed");
+    }
+    opts.appendChild(lab);
+  });
+  wrap.appendChild(opts);
+}
+function renderRows(q,li,qi,wrap){
+  const k=key(li,qi), rows=el("div","rows");
+  if(!state.answers[k]) state.answers[k]=[];
+  q.items.forEach((it,i)=>{
+    const row=el("div","row");
+    row.appendChild(el("div",null,it.text));
+    const sel=el("select");
+    sel.appendChild(el("option",null,"— choose —"));
+    q.options.forEach(o=>{
+      const op=el("option",null,o); op.value=o;
+      if(state.answers[k][i]===o) op.selected=true;
+      sel.appendChild(op);
+    });
+    sel.onchange=()=>{ state.answers[k][i]=sel.value; };
+    if(state.checked[k]){
+      sel.disabled=true;
+      if(state.answers[k][i]===it.answer) row.classList.add("correct");
+      else{ row.classList.add("wrong"); }
+    }
+    row.appendChild(sel);
+    if(state.checked[k] && state.answers[k][i]!==it.answer){
+      row.appendChild(el("div","fix","Correct answer: "+it.answer));
+    }
+    rows.appendChild(row);
+  });
+  wrap.appendChild(rows);
+}
+function renderWritten(q,li,qi,wrap){
+  const k=key(li,qi), box=el("div","written");
+  if(q.scenario) box.appendChild(el("div","scenario","<b>Scenario</b>"+q.scenario));
+  if(q.bullets){
+    const ul=el("ul","revise"); q.bullets.forEach(b=>ul.appendChild(el("li",null,b)));
+    const c=el("div","hint","<b>In your answer you should:</b>"); c.appendChild(ul); box.appendChild(c);
+  }
+  const ta=el("textarea");
+  ta.placeholder="Write your answer here…";
+  ta.value=state.answers[k]||"";
+  ta.oninput=()=>{ state.answers[k]=ta.value; };
+  box.appendChild(ta);
+
+  const btnRow=el("div"); btnRow.style.marginTop="12px";
+  const reveal=el("button","btn ghost","Reveal model answer and mark scheme");
+  btnRow.appendChild(reveal); box.appendChild(btnRow);
+
+  const model=el("div","model");
+  model.appendChild(el("h4",null,"Distinction-standard model answer"));
+  q.model.forEach(p=>model.appendChild(el("p",null,p)));
+  box.appendChild(model);
+
+  const crit=el("div","criteria");
+  crit.appendChild(el("h4",null,"Mark yourself against the mark scheme"));
+  crit.appendChild(el("p","sub","Tick each point your own answer actually made. Be strict — the examiner will be. Each point is worth 1 mark."));
+  const scoreLine=el("div","self-score");
+  function recalc(){
+    const n=[...crit.querySelectorAll("input")].filter(i=>i.checked).length;
+    state.selfmark[k]=Math.min(n,q.marks);
+    scoreLine.innerHTML='<span>Your self-assessed mark</span><span class="val">'+state.selfmark[k]+" / "+q.marks+"</span>";
+    updateChip();
+  }
+  q.criteria.forEach(c=>{
+    const lab=el("label","crit");
+    const inp=el("input"); inp.type="checkbox";
+    inp.onchange=recalc;
+    lab.appendChild(inp); lab.appendChild(el("span",null,c));
+    crit.appendChild(lab);
+  });
+  crit.appendChild(scoreLine);
+  box.appendChild(crit);
+
+  reveal.onclick=()=>{
+    model.classList.add("show"); crit.classList.add("show");
+    reveal.disabled=true; reveal.textContent="Model answer shown below";
+    if(state.selfmark[k]===undefined){ state.selfmark[k]=0; }
+    recalc();
+  };
+  if(state.selfmark[k]!==undefined){
+    model.classList.add("show"); crit.classList.add("show");
+    reveal.disabled=true; reveal.textContent="Model answer shown below";
+    scoreLine.innerHTML='<span>Your self-assessed mark</span><span class="val">'+state.selfmark[k]+" / "+q.marks+"</span>";
+  } else {
+    scoreLine.innerHTML='<span>Your self-assessed mark</span><span class="val">– / '+q.marks+"</span>";
+  }
+  wrap.appendChild(box);
+}
+
+/* ---------- level renderer ---------- */
+function renderLevel(li){
+  const L=DATA[li], main=document.getElementById("main");
+  main.innerHTML="";
+
+  const head=el("div","card level-head");
+  head.style.borderLeftColor=L.colour;
+  head.appendChild(el("h2",null,L.title));
+  head.appendChild(el("p",null,L.blurb));
+  const meta=el("div","level-meta");
+  L.meta.forEach(m=>meta.appendChild(el("span","tag",m)));
+  const t=levelTotals(li);
+  meta.appendChild(el("span","tag grey",t.m+" marks available"));
+  head.appendChild(meta);
+  main.appendChild(head);
+
+  if(L.recap && L.recap.length){
+    const rc=el("div","card recap");
+    rc.appendChild(el("h3",null,"Before you start — what you need to know"));
+    rc.appendChild(el("p","lead","Read this through first. Everything tested on this level is covered here, in the same words the specification uses."));
+    const body=el("div");
+    L.recap.forEach(r=>{
+      const item=el("div","recap-item");
+      item.appendChild(el("h4",null,r.h));
+      item.insertAdjacentHTML("beforeend", r.b);
+      body.appendChild(item);
+    });
+    rc.appendChild(body);
+    const tog=el("button","btn grey recap-toggle","Hide the recap");
+    tog.onclick=()=>{
+      const hidden=body.style.display==="none";
+      body.style.display=hidden?"":"none";
+      tog.textContent=hidden?"Hide the recap":"Show the recap";
+    };
+    rc.appendChild(tog);
+    main.appendChild(rc);
+  }
+
+  const card=el("div","card");
+  L.questions.forEach((q,qi)=>{
+    const k=key(li,qi);
+    const wrap=el("div","q");
+    const hd=el("div","q-head");
+    hd.appendChild(el("div","q-num","Q"+(qi+1)));
+    hd.appendChild(el("div","q-text",q.q));
+    hd.appendChild(el("div","q-marks","["+marksFor(q)+"]"));
+    wrap.appendChild(hd);
+    wrap.appendChild(el("div","q-ref",q.ref+" · "+q.ao));
+    if(q.teach) wrap.appendChild(el("div","teach","<b>Know this first</b>"+q.teach));
+
+    if(q.type==="mcq") renderMCQ(q,li,qi,wrap);
+    else if(q.type==="multi") renderMulti(q,li,qi,wrap);
+    else if(q.type==="classify"||q.type==="match") renderRows(q,li,qi,wrap);
+    else if(q.type==="written") renderWritten(q,li,qi,wrap);
+
+    if(q.type!=="written"){
+      const fb=el("div","feedback");
+      if(state.checked[k]){
+        const got=earnedFor(li,qi), max=marksFor(q);
+        fb.classList.add("show", got===max?"good":"bad");
+        fb.innerHTML="<b>"+got+" / "+max+" marks</b>"+q.explain;
+      }
+      wrap.appendChild(fb);
+    }
+    card.appendChild(wrap);
+  });
+
+  const acts=el("div","actions");
+  const check=el("button","btn","Check this level");
+  check.onclick=()=>{
+    L.questions.forEach((q,qi)=>{ if(q.type!=="written") state.checked[key(li,qi)]=true; });
+    renderLevel(li); updateChip();
+    document.querySelector(".level-result").scrollIntoView({behavior:"smooth",block:"center"});
+  };
+  acts.appendChild(check);
+
+  if(li<DATA.length-1){
+    const nx=el("button","btn ghost","Next level →");
+    nx.onclick=()=>{ state.level=li+1; render(); window.scrollTo(0,0); };
+    acts.appendChild(nx);
+  } else {
+    const nx=el("button","btn ghost","See my results →");
+    nx.onclick=()=>{ state.level=DATA.length; render(); window.scrollTo(0,0); };
+    acts.appendChild(nx);
+  }
+  const rs=el("button","btn grey","Reset this level");
+  rs.onclick=()=>{
+    L.questions.forEach((q,qi)=>{
+      const k=key(li,qi);
+      delete state.answers[k]; delete state.checked[k]; delete state.selfmark[k];
+    });
+    renderLevel(li); updateChip();
+  };
+  acts.appendChild(rs);
+  card.appendChild(acts);
+
+  const res=el("div","level-result");
+  const anyChecked=L.questions.some((q,qi)=>state.checked[key(li,qi)]||state.selfmark[key(li,qi)]!==undefined);
+  if(anyChecked){
+    res.classList.add("show");
+    const pct=t.m? Math.round(t.e/t.m*100):0;
+    res.innerHTML="<strong>"+t.e+" / "+t.m+"</strong> on "+L.name+" ("+pct+"%). "+
+      (pct>=75?"Distinction standard on this level — move on.":
+       pct>=60?"Merit standard. Re-read the feedback on anything you lost marks on before moving up.":
+       pct>=40?"Pass standard. Go back over the reference material for this level before the next one.":
+       "Below pass standard on this level. Review the teacher slides for these topics, then reset and try again.");
+  }
+  card.appendChild(res);
+  main.appendChild(card);
+}
+
+/* ---------- results ---------- */
+function renderResults(){
+  const main=document.getElementById("main"); main.innerHTML="";
+  const e=earnedTotal(), m=totalMarks(), pct=m?Math.round(e/m*100):0;
+
+  const head=el("div","card level-head");
+  head.style.borderLeftColor="var(--accent)";
+  head.appendChild(el("h2",null,"Your results"));
+  head.appendChild(el("p",null,"Indicative only. Auto-marked sections are objective; written sections use your own self-assessment against the mark scheme, so be honest about what you actually wrote."));
+  main.appendChild(head);
+
+  const card=el("div","card");
+  const big=el("div","big-score");
+  big.appendChild(el("div","pct",pct+"%"));
+  big.appendChild(el("div","of",e+" out of "+m+" marks"));
+  let g="u",gl="Below pass standard";
+  if(pct>=75){g="d";gl="Distinction standard";}
+  else if(pct>=60){g="m";gl="Merit standard";}
+  else if(pct>=40){g="p";gl="Pass standard";}
+  big.appendChild(el("div","grade "+g,gl));
+  card.appendChild(big);
+
+  // by level
+  card.appendChild(el("h3",null,"By level"));
+  const t1=el("table","bd");
+  t1.innerHTML="<tr><th>Level</th><th>Focus</th><th></th><th>Marks</th></tr>";
+  DATA.forEach((L,li)=>{
+    const t=levelTotals(li), p=t.m?Math.round(t.e/t.m*100):0;
+    const tr=el("tr");
+    tr.innerHTML="<td><b>"+L.name+"</b></td><td>"+L.title.split("· ")[1]+
+      "</td><td><div class='meter'><i style='width:"+p+"%'></i></div></td>"+
+      "<td class='n'>"+t.e+" / "+t.m+"</td>";
+    t1.appendChild(tr);
+  });
+  card.appendChild(t1);
+
+  // by content area
+  const areas={A:"Learning aim A — Cloud technologies and tools in organisations",
+               B:"Learning aim B — Design and deploy a cloud collaboration service",
+               C:"Learning aim C — Manage and review a cloud collaboration service"};
+  const av={}; Object.keys(areas).forEach(a=>av[a]={e:0,m:0});
+  DATA.forEach((L,li)=>L.questions.forEach((q,qi)=>{
+    if(!av[q.area]) av[q.area]={e:0,m:0};
+    av[q.area].e+=earnedFor(li,qi); av[q.area].m+=marksFor(q);
+  }));
+  card.appendChild(el("h3",null,"By learning aim"));
+  const t2=el("table","bd");
+  t2.innerHTML="<tr><th>Area</th><th></th><th>Marks</th></tr>";
+  Object.keys(areas).forEach(a=>{
+    if(!av[a].m) return;
+    const p=Math.round(av[a].e/av[a].m*100);
+    const tr=el("tr");
+    tr.innerHTML="<td>"+areas[a]+"</td><td><div class='meter'><i style='width:"+p+"%'></i></div></td><td class='n'>"+av[a].e+" / "+av[a].m+"</td>";
+    t2.appendChild(tr);
+  });
+  card.appendChild(t2);
+
+  // by AO
+  const ao={}; DATA.forEach((L,li)=>L.questions.forEach((q,qi)=>{
+    const list=q.ao.split("/").map(s=>s.trim());
+    list.forEach(a=>{ ao[a]=ao[a]||{e:0,m:0}; ao[a].e+=earnedFor(li,qi)/list.length; ao[a].m+=marksFor(q)/list.length; });
+  }));
+  card.appendChild(el("h3",null,"By assessment criterion"));
+  const t3=el("table","bd");
+  t3.innerHTML="<tr><th>Criterion</th><th></th><th>Marks</th></tr>";
+  Object.keys(ao).sort().forEach(a=>{
+    const p=Math.round(ao[a].e/ao[a].m*100);
+    const tr=el("tr");
+    tr.innerHTML="<td>"+a+"</td><td><div class='meter'><i style='width:"+p+"%'></i></div></td><td class='n'>"+Math.round(ao[a].e)+" / "+Math.round(ao[a].m)+"</td>";
+    t3.appendChild(tr);
+  });
+  card.appendChild(t3);
+
+  // revision list
+  const weak=[];
+  DATA.forEach((L,li)=>L.questions.forEach((q,qi)=>{
+    const got=earnedFor(li,qi), max=marksFor(q);
+    if(max>0 && got/max < 0.6 && (state.checked[key(li,qi)]||state.selfmark[key(li,qi)]!==undefined)){
+      if(!weak.includes(q.ref)) weak.push(q.ref);
+    }
+  }));
+  card.appendChild(el("h3",null,"What to revise next"));
+  if(weak.length){
+    const ul=el("ul","revise");
+    weak.forEach(w=>ul.appendChild(el("li",null,w)));
+    card.appendChild(ul);
+  } else {
+    card.appendChild(el("p","hint","Nothing flagged yet — either you have not checked your answers, or you scored above 60% on every topic you attempted."));
+  }
+
+  const acts=el("div","actions");
+  const pr=el("button","btn","Print / save as PDF");
+  pr.onclick=()=>window.print();
+  acts.appendChild(pr);
+  const back=el("button","btn ghost","Back to Level 1");
+  back.onclick=()=>{ state.level=0; render(); window.scrollTo(0,0); };
+  acts.appendChild(back);
+  const clr=el("button","btn grey","Reset the whole test");
+  clr.onclick=()=>{
+    if(confirm("Clear every answer and start again?")){
+      state.answers={}; state.checked={}; state.selfmark={}; state.level=0; render(); window.scrollTo(0,0);
+    }
+  };
+  acts.appendChild(clr);
+  card.appendChild(acts);
+  main.appendChild(card);
+}
+
+function render(){
+  setCurrentNav();
+  if(state.level>=DATA.length) renderResults();
+  else renderLevel(state.level);
+  updateChip();
+}
+
+buildNav();
+render();
+</script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  const DEFAULT_LINE_HEIGHT = 16;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  const PICK_CAPABILITIES = ["pick"];
+  const PICK_CHAIN_LENGTH = 4;
+  const PICK_MAX_TEXT_CHARS = 120;
+  const PICK_MAX_HTML_CHARS = 300;
+
+  function truncate(value, maxChars) {
+    return value.length > maxChars ? value.slice(0, maxChars - 1) + "…" : value;
+  }
+
+  function isPickableElement(element) {
+    return (
+      element instanceof Element &&
+      element !== document.documentElement &&
+      element !== document.body
+    );
+  }
+
+  function resolvePickTarget(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const element = document.elementFromPoint(x, y);
+    return isPickableElement(element) ? element.closest("svg") || element : null;
+  }
+
+  function pickLabel(element) {
+    if (element.id) return element.localName + "#" + element.id;
+    return [element.localName].concat(Array.from(element.classList).slice(0, 2)).join(".");
+  }
+
+  // Only attributes that help find the element in source. data-* values and URL
+  // query strings or fragments can carry tokens.
+  const PICK_ATTRIBUTES = new Set([
+    "id",
+    "class",
+    "name",
+    "type",
+    "role",
+    "alt",
+    "aria-label",
+    "href",
+    "src",
+  ]);
+
+  function pickAttributeValue(attribute) {
+    return attribute.name === "href" || attribute.name === "src"
+      ? attribute.value.split(/[?#]/)[0]
+      : attribute.value;
+  }
+
+  function describePickElement(element) {
+    const chain = [];
+    for (
+      let current = element;
+      isPickableElement(current) && chain.length < PICK_CHAIN_LENGTH;
+      current = current.parentElement
+    ) {
+      chain.unshift(current);
+    }
+    const attributes = Array.from(element.attributes)
+      .filter((attribute) => PICK_ATTRIBUTES.has(attribute.name))
+      .map((attribute) => ` ${attribute.name}="${pickAttributeValue(attribute).replace(/"/g, "&quot;")}"`)
+      .join("");
+    const text = (element.innerText || element.textContent || "").replace(/\s+/g, " ").trim();
+    return {
+      chain: chain.map(pickLabel),
+      html: truncate(`<${element.localName}${attributes}>`, PICK_MAX_HTML_CHARS),
+      text: text ? truncate(text, PICK_MAX_TEXT_CHARS) : undefined,
+    };
+  }
+
+  // Hover asks once per frame, and innerText on a large section forces layout,
+  // so only the rect is re-read while the pointer stays on the same element.
+  // Clicks ask for fresh details since the page may have changed the element.
+  let lastPick = null;
+
+  function describePickTarget(element, fresh) {
+    if (fresh || lastPick?.element !== element) {
+      lastPick = { element, details: describePickElement(element) };
+    }
+    const rect = element.getBoundingClientRect();
+    return {
+      rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      ...lastPick.details,
+    };
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      capabilities: PICK_CAPABILITIES,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_PICK") {
+      const element = resolvePickTarget(event.data.x, event.data.y);
+      postToTrustedTop({
+        type: "INLINE_EDIT_PICK_RESULT",
+        seq: event.data.seq,
+        target: element ? describePickTarget(element, event.data.fresh === true) : null,
+      });
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_BY") {
+      const { deltaX, deltaY, deltaMode } = event.data;
+      if (!scrollForwarding || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+      if (deltaMode !== 0 && deltaMode !== 1 && deltaMode !== 2) return;
+      const lineHeight =
+        parseFloat(getComputedStyle(document.documentElement).lineHeight) || DEFAULT_LINE_HEIGHT;
+      const scaleX = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerWidth : 1;
+      const scaleY = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerHeight : 1;
+      // The selection overlay receives the wheel event instead of this iframe.
+      // Instant scrolling preserves trackpad deltas even on smooth-scroll sites.
+      window.scrollBy({ left: deltaX * scaleX, top: deltaY * scaleY, behavior: "instant" });
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+</script></body>
+</html>
