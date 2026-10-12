@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit 16 Interactive Lab</title>
+<style>
+:root{
+  --bg:#f4f5f8; --panel:#ffffff; --ink:#15181f; --muted:#5a6376; --line:#e2e5ec;
+  --accent:#3b4ea0; --accent-soft:#eef0fa; --ok:#1c7a4a; --ok-soft:#e6f4ec;
+  --bad:#b4262c; --bad-soft:#fbeaea; --warn:#8a5a00; --warn-soft:#fdf2dc;
+  --l1:#3b4ea0; --l2:#1c7a7a; --l3:#8a5a00; --l4:#8a3a7a; --l5:#b4262c;
+  --radius:10px; --shadow:0 1px 2px rgba(20,24,40,.06),0 6px 20px rgba(20,24,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111318; --panel:#1a1d25; --ink:#e9ecf3; --muted:#9aa3b6; --line:#2b303b;
+    --accent:#8ea0e8; --accent-soft:#232842; --ok:#6ed19b; --ok-soft:#182a20;
+    --bad:#ef8a8a; --bad-soft:#2c1a1c; --warn:#e5b95e; --warn-soft:#2d2513;
+    --l1:#8ea0e8; --l2:#6fc9c9; --l3:#e5b95e; --l4:#d79ad0; --l5:#ef8a8a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 96px}
+
+/* ---------- header ---------- */
+header.top{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:40; box-shadow:0 1px 0 var(--line);
+}
+.top-inner{max-width:900px;margin:0 auto;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.01em;flex:1 1 220px}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;letter-spacing:0}
+.score-chip{
+  background:var(--accent-soft); color:var(--accent); border-radius:999px;
+  padding:6px 14px; font-weight:700; font-size:14px; white-space:nowrap;
+}
+.bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden;width:100%;margin-top:4px}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s ease}
+
+/* ---------- level nav ---------- */
+nav.levels{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;max-width:900px;margin:0 auto;scrollbar-width:thin}
+nav.levels button{
+  flex:0 0 auto; border:1px solid var(--line); background:var(--panel); color:var(--muted);
+  padding:7px 13px; border-radius:999px; font:600 13px/1 inherit; cursor:pointer; white-space:nowrap;
+}
+nav.levels button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+nav.levels button .tick{color:var(--ok);font-weight:800}
+nav.levels button[aria-current="true"] .tick{color:#fff}
+
+/* ---------- cards ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin:16px 0}
+.level-head{padding:26px 22px;border-left:5px solid var(--accent)}
+.level-head h2{margin:0 0 4px;font-size:22px;letter-spacing:-.02em}
+.level-head p{margin:0;color:var(--muted);font-size:14.5px}
+.level-meta{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{font:600 11.5px/1 inherit;letter-spacing:.03em;text-transform:uppercase;padding:5px 9px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.tag.grey{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+.q{border-top:1px solid var(--line);padding:22px 0 4px}
+.q:first-of-type{border-top:0;padding-top:4px}
+.q-head{display:flex;gap:10px;align-items:baseline;margin-bottom:10px}
+.q-num{font:700 13px/1.5 inherit;color:var(--muted);flex:0 0 auto;min-width:34px}
+.q-text{font-weight:600;flex:1}
+.q-marks{font:600 12px/1.5 inherit;color:var(--muted);white-space:nowrap}
+.q-ref{font:500 11.5px/1 inherit;color:var(--muted);letter-spacing:.02em;margin-left:44px;margin-bottom:10px;text-transform:uppercase}
+
+.scenario{background:var(--accent-soft);border-radius:8px;padding:14px 16px;margin:0 0 16px;font-size:14.5px}
+.scenario > b:first-child{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;color:var(--accent);margin-bottom:5px}
+.scenario b{font-weight:700}
+
+.teach code,.scenario code,.model code,.q-text code{font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;word-break:break-word}
+.scenario code{display:inline-block;margin:1px 0}
+table.matrix{border-collapse:collapse;margin:8px 0 12px;font-size:14px;width:100%;max-width:520px}
+table.matrix th,table.matrix td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+table.matrix th{background:var(--bg);font-weight:600}
+table.matrix td.l{background:var(--ok-soft);color:var(--ok);font-weight:700}
+table.matrix td.m{background:var(--warn-soft);color:var(--warn);font-weight:700}
+table.matrix td.h{background:var(--bad-soft);color:var(--bad);font-weight:700}
+table.matrix td.x{background:var(--bad);color:#fff;font-weight:800}
+/* ---------- knowledge recap ---------- */
+.recap{border-left:5px solid var(--ok)}
+.recap h3{margin:0 0 4px;font-size:17px;letter-spacing:-.01em}
+.recap>p.lead{margin:0 0 16px;color:var(--muted);font-size:14px}
+.recap-item{border-top:1px solid var(--line);padding:14px 0}
+.recap-item:first-of-type{border-top:0;padding-top:0}
+.recap-item h4{margin:0 0 6px;font-size:14.5px;color:var(--ok)}
+.recap-item p{margin:0 0 8px;font-size:14.5px}
+.recap-item p:last-child{margin-bottom:0}
+.recap-item ul{margin:6px 0 0;padding-left:20px;font-size:14.5px}
+.recap-item li{margin-bottom:4px}
+.recap-item .kw{font-weight:600}
+.recap-toggle{margin-top:6px}
+
+.teach{
+  margin:0 0 12px 44px;padding:11px 14px;border-radius:8px;
+  background:var(--warn-soft);border-left:3px solid var(--warn);font-size:14px
+}
+.teach > b:first-child{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--warn);margin-bottom:4px}
+.teach b{font-weight:700}
+@media(max-width:640px){.teach,.opts,.rows,.written,.q-ref,.feedback{margin-left:0!important}}
+
+/* ---------- options ---------- */
+.opts{margin-left:44px;display:grid;gap:7px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:15px;background:var(--panel)}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin:4px 0 0;flex:0 0 auto;accent-color:var(--accent)}
+.opt.correct{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt.missed{border-color:var(--ok);border-style:dashed}
+
+/* ---------- match / classify ---------- */
+.rows{margin-left:44px;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:1fr 210px;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px}
+.row select{font:inherit;font-size:14px;padding:7px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.row.correct{background:var(--ok-soft);border-color:var(--ok)}
+.row.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.row .fix{grid-column:1/-1;font-size:13px;color:var(--bad);font-weight:600}
+@media(max-width:640px){.row{grid-template-columns:1fr}}
+
+/* ---------- written ---------- */
+.written{margin-left:44px}
+textarea{
+  width:100%;min-height:130px;font:inherit;font-size:15px;padding:12px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical
+}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+.hint b{color:var(--ink)}
+
+.model{margin-top:14px;border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:8px;padding:16px;background:var(--ok-soft);display:none}
+.model.show{display:block}
+.model h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--ok)}
+.model p{margin:0 0 10px;font-size:14.5px}
+.model p:last-child{margin-bottom:0}
+
+.criteria{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:16px;display:none}
+.criteria.show{display:block}
+.criteria h4{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.criteria .sub{font-size:13px;color:var(--muted);margin:0 0 12px}
+.crit{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:14.5px;cursor:pointer;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0}
+.crit input{margin:4px 0 0;accent-color:var(--ok)}
+.self-score{margin-top:12px;padding-top:12px;border-top:2px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.self-score span.val{color:var(--accent);font-size:18px}
+
+/* ---------- buttons ---------- */
+button.btn{
+  font:600 14px/1 inherit;padding:11px 18px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;cursor:pointer
+}
+button.btn.ghost{background:transparent;color:var(--accent)}
+button.btn.grey{background:transparent;color:var(--muted);border-color:var(--line)}
+button.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+
+.feedback{margin-left:44px;margin-top:10px;font-size:14px;padding:10px 12px;border-radius:7px;display:none}
+.feedback.show{display:block}
+.feedback.good{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.feedback b{display:block;margin-bottom:3px}
+
+.level-result{margin-top:18px;padding:16px;border-radius:8px;background:var(--accent-soft);display:none;font-size:15px}
+.level-result.show{display:block}
+.level-result strong{font-size:20px}
+
+/* ---------- results ---------- */
+.big-score{text-align:center;padding:10px 0 20px}
+.big-score .pct{font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.big-score .of{color:var(--muted);font-size:15px;margin-top:6px}
+.grade{display:inline-block;margin-top:14px;padding:8px 20px;border-radius:999px;font-weight:700;font-size:15px}
+.grade.d{background:var(--ok-soft);color:var(--ok)}
+.grade.m{background:var(--accent-soft);color:var(--accent)}
+.grade.p{background:var(--warn-soft);color:var(--warn)}
+.grade.u{background:var(--bad-soft);color:var(--bad)}
+table.bd{width:100%;border-collapse:collapse;margin-top:8px;font-size:14.5px}
+table.bd th,table.bd td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+table.bd th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+table.bd td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.meter{height:7px;background:var(--line);border-radius:999px;overflow:hidden;min-width:90px}
+.meter>i{display:block;height:100%;background:var(--accent)}
+ul.revise{margin:8px 0 0;padding-left:20px;font-size:14.5px}
+ul.revise li{margin-bottom:6px}
+
+.hidden{display:none}
+@media print{
+  header.top,nav.levels,.actions,button{display:none!important}
+  .card{break-inside:avoid;box-shadow:none}
+  body{background:#fff}
+}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px 0}
+.q .pills{margin-left:44px}
+button.pill{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:999px;font:600 14px/1 inherit;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.stack{display:grid;gap:6px;margin:6px 0 10px}
+button.layer{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:11px 14px;border-radius:8px;border:1px solid var(--line);font:500 15px/1.3 inherit;cursor:pointer;color:var(--ink)}
+button.layer b{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+button.layer.you{background:var(--warn-soft)}
+button.layer.you b{color:var(--warn)}
+button.layer.prov{background:var(--accent-soft)}
+button.layer.prov b{color:var(--accent)}
+.table-scroll{overflow-x:auto;margin:6px 0}
+table.grid-q{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+table.grid-q th,table.grid-q td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+table.grid-q th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+button.cell{width:100%;min-width:92px;padding:7px 6px;border-radius:6px;border:1px dashed var(--line);background:var(--bg);color:var(--ink);font:600 13px/1 inherit;cursor:pointer}
+button.cell.right{background:var(--ok-soft);color:var(--ok);border-style:solid;border-color:var(--ok)}
+button.cell.wrongc{background:var(--bad-soft);color:var(--bad);border-style:solid;border-color:var(--bad)}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px 22px;margin-bottom:18px}
+label.slider{display:block;font-size:14px}
+.s-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:2px}
+.s-top b{font-variant-numeric:tabular-nums;color:var(--accent)}
+label.slider input{width:100%;accent-color:var(--accent)}
+.chart svg{width:100%;height:auto;display:block}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font-size:11px}
+.chart .lbl{fill:var(--bad);font-size:12px;font-weight:700}
+.chart .bar-c{fill:var(--l2)}
+.chart .capline{stroke:var(--bad);stroke-width:2.5;stroke-dasharray:7 5}
+.legend{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:6px 0 0}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.sw.c{background:var(--l2)} .sw.s{background:transparent;border-top:3px dashed var(--bad);height:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:16px 0}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi span{display:block;font-size:12.5px;color:var(--muted)}
+.kpi b{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi small{display:block;color:var(--muted);font-size:12.5px}
+ol.tasks{padding-left:22px;font-size:15px}
+ol.tasks li{margin-bottom:8px}
+.case-date{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.case h3{margin-top:2px}
+.srcline{font-size:13px;color:var(--muted)}
+.srcline a,.reslist a,.model a{color:var(--accent)}
+label.fld{display:block;margin:10px 0}
+label.fld span{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
+label.fld textarea,table.plan textarea{width:100%;font:15px/1.45 inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;resize:vertical}
+table.plan{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+table.plan th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+table.plan td{padding:4px;vertical-align:top}
+table.plan textarea{font-size:14px;padding:6px 8px;min-height:44px}
+table.plan .x{width:84px}
+button.btn.sm{padding:8px 12px;font-size:13px}
+.actions.tight{margin-top:10px;padding-top:0;border-top:0}
+ul.reslist{list-style:none;padding:0;margin:0}
+ul.reslist li{padding:10px 0;border-top:1px solid var(--line)}
+ul.reslist li:first-child{border-top:0}
+ul.reslist a{font-weight:600}
+ul.reslist span{display:block;font-size:14px;color:var(--muted)}
+.rk{padding:2px 10px;border-radius:999px;font-size:13px}
+.rk.bad{background:var(--bad-soft);color:var(--bad)} .rk.warn{background:var(--warn-soft);color:var(--warn)} .rk.good{background:var(--ok-soft);color:var(--ok)}
+.srcs{font-size:13px;color:var(--muted);margin:28px 0 40px;line-height:1.55}
+.srcs a{color:var(--accent)}
+@media print{ textarea{border:1px solid #999!important;background:#fff!important} .table-scroll{overflow:visible} table.plan{min-width:0} table.plan .x{display:none} }
+.card>.teach{margin-left:0}
+label.fld textarea{min-height:64px}
+table.plan textarea{min-height:48px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">Unit 16: Cloud Storage and Collaboration Tools — Interactive Lab
+      <small>BTEC Level 3 National IT · Explore, simulate, decide and plan · Learning aims A, B and C</small>
+    </div>
+    <div class="score-chip" id="chip">0 of 5 activities checked</div>
+  </div>
+  <nav class="levels" id="nav"></nav>
+</header>
+
+<div class="wrap">
+  <main id="main"></main>
+  <footer class="srcs">
+    <p><b>Specification:</b> <a href="https://qualifications.pearson.com/content/dam/pdf/BTEC-Nationals/Information-Technology/2016/specification-and-sample-assessments/specification-pearson-btec-level-3-national-extended-diploma-in-information-technology.pdf" target="_blank" rel="noopener">Pearson BTEC Level 3 National Extended Diploma in IT, Unit 16</a>. Unit 16 is an optional unit in the Diploma and Extended Diploma; it is not part of the Extended Certificate. Figures in the cost simulator are illustrative, not real prices.</p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   UNIT 16 — INTERACTIVE LAB
+   ============================================================ */
+const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!==undefined)e.innerHTML=h; return e;};
+const done=new Set();
+function mark(id){ done.add(id); document.getElementById("chip").textContent=done.size+" of 5 activities checked"; }
+
+const TABS=[
+ {id:"stack", name:"1 · Who manages what?", render:renderStack},
+ {id:"cost",  name:"2 · Elasticity and cost", render:renderCost},
+ {id:"deliv", name:"3 · Delivery model chooser", render:renderDeliv},
+ {id:"juris", name:"4 · Where is my data?", render:renderJuris},
+ {id:"cases", name:"5 · Case files", render:renderCases},
+ {id:"plan",  name:"6 · Project planner (B and C)", render:renderPlan},
+ {id:"res",   name:"Resources", render:renderRes}
+];
+let cur=0;
+function buildNav(){
+  const nav=document.getElementById("nav"); nav.innerHTML="";
+  TABS.forEach((t,i)=>{ const b=el("button",null,t.name); b.onclick=()=>{cur=i;render();window.scrollTo(0,0)}; nav.appendChild(b); });
+}
+function render(){
+  document.querySelectorAll("#nav button").forEach((b,i)=>b.setAttribute("aria-current",i===cur?"true":"false"));
+  const m=document.getElementById("main"); m.innerHTML=""; TABS[cur].render(m);
+}
+function head(m,title,blurb,tags,colour){
+  const h=el("div","card level-head"); h.style.borderLeftColor=colour||"var(--accent)";
+  h.appendChild(el("h2",null,title)); h.appendChild(el("p",null,blurb));
+  const meta=el("div","level-meta"); (tags||[]).forEach(t=>meta.appendChild(el("span","tag",t))); h.appendChild(meta);
+  m.appendChild(h);
+}
+
+/* ---------- 1. Shared responsibility stack ---------- */
+const LAYERS=["Data and content","User accounts and access","Applications","Runtime and middleware","Guest operating system","Virtualisation (hypervisor)","Physical servers and storage","Networking","Data centre building, power and cooling"];
+const MODELS=["On-premises","IaaS","PaaS","SaaS"];
+// number of top layers the customer manages per model
+const CUST={"On-premises":9,"IaaS":5,"PaaS":3,"SaaS":2};
+const LAYER_NOTE=[
+ "Always yours. Even in SaaS, the provider does not decide what is stored, who it is shared with or whether it is backed up separately.",
+ "Always yours. Creating accounts, enforcing MFA and setting permissions is the customer's job in every model. Most cloud breaches start here.",
+ "Yours in IaaS and PaaS because you install or write the software. In SaaS the provider runs the application, such as Teams or Google Drive.",
+ "Software the application depends on, such as Python, .NET or a web server. The provider manages it in PaaS and SaaS.",
+ "In IaaS you choose, patch and secure the guest OS image yourself. This is the main difference between IaaS and PaaS.",
+ "The hypervisor that splits physical hosts into virtual machines. This is what makes resource pooling and elasticity possible.",
+ "The physical hosts and disks. In every cloud model the provider buys, maintains and replaces them.",
+ "Physical switches, routers and links inside the data centre. Your own office network is still yours.",
+ "The building, power, cooling and physical security. On-premises, that is your store cupboard."
+];
+function renderStack(m){
+  head(m,"Who manages what? The shared responsibility model","Choose a service model to see which layers the customer manages and which the provider manages. Then try the challenge: set every cell yourself and check it. This underpins A2 and the security risks in A4.",["A2 service models","A4 risks","A.P2"],"var(--l1)");
+  const c=el("div","card");
+  c.appendChild(el("h3",null,"Explore"));
+  const pick=el("div","pills"); let sel="IaaS";
+  const grid=el("div","stack");
+  const note=el("p","hint","Select a layer to read what it means.");
+  function draw(){
+    pick.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===sel));
+    grid.innerHTML="";
+    LAYERS.forEach((L,i)=>{
+      const you=i<CUST[sel];
+      const r=el("button","layer "+(you?"you":"prov"),"<span>"+L+"</span><b>"+(you?"Customer":"Provider")+"</b>");
+      r.onclick=()=>{note.innerHTML="<b>"+L+".</b> "+LAYER_NOTE[i];};
+      grid.appendChild(r);
+    });
+  }
+  MODELS.forEach(x=>{const b=el("button","pill",x); b.dataset.m=x; b.onclick=()=>{sel=x;draw()}; pick.appendChild(b);});
+  c.appendChild(pick); c.appendChild(grid); c.appendChild(note); draw();
+  m.appendChild(c);
+
+  const ch=el("div","card");
+  ch.appendChild(el("h3",null,"Challenge: complete the grid"));
+  ch.appendChild(el("p","hint","Click a cell to cycle it between Customer and Provider. Every cell starts as a question mark. Then press Check."));
+  const t=el("table","grid-q"); const st={};
+  let hr="<tr><th>Layer</th>"+MODELS.map(x=>"<th>"+x+"</th>").join("")+"</tr>"; t.innerHTML=hr;
+  LAYERS.forEach((L,i)=>{
+    const tr=el("tr"); tr.appendChild(el("td",null,L));
+    MODELS.forEach(x=>{
+      const k=i+"_"+x; st[k]="?";
+      const td=el("td"); const b=el("button","cell","?"); b.setAttribute("aria-label",L+", "+x);
+      b.onclick=()=>{ st[k]= st[k]==="?"?"Customer":st[k]==="Customer"?"Provider":"Customer"; b.textContent=st[k]; b.className="cell"; };
+      b.dataset.k=k; td.appendChild(b); tr.appendChild(td);
+    });
+    t.appendChild(tr);
+  });
+  const sc=el("div","table-scroll"); sc.appendChild(t); ch.appendChild(sc);
+  const fb=el("div","feedback");
+  const acts=el("div","actions");
+  const chk=el("button","btn","Check");
+  chk.onclick=()=>{
+    let n=0;
+    t.querySelectorAll("button.cell").forEach(b=>{
+      const [i,x]=b.dataset.k.split("_"); const right=(+i<CUST[x])?"Customer":"Provider";
+      b.className="cell "+(st[b.dataset.k]===right?"right":"wrongc");
+      if(st[b.dataset.k]===right)n++; else b.title="Correct answer: "+right;
+    });
+    fb.className="feedback show "+(n===36?"good":"bad");
+    fb.innerHTML="<b>"+n+" / 36 correct</b>"+(n===36?"Perfect. Remember the exam-style point: whatever you buy, the customer always keeps responsibility for data and access.":"Cells marked red are wrong; hover over them to see the right answer. The pattern is a staircase: each step from on-premises to SaaS hands more layers to the provider, but the top two layers never move.");
+    mark("stack");
+  };
+  const rs=el("button","btn grey","Reset");
+  rs.onclick=()=>{ Object.keys(st).forEach(k=>st[k]="?"); t.querySelectorAll("button.cell").forEach(b=>{b.textContent="?";b.className="cell";b.title=""}); fb.className="feedback"; };
+  acts.appendChild(chk); acts.appendChild(rs); ch.appendChild(acts); ch.appendChild(fb);
+  m.appendChild(ch);
+}
+
+/* ---------- 2. Elasticity and cost simulator ---------- */
+function renderCost(m){
+  head(m,"Elasticity and cost simulator","Change the organisation's workload and prices. The chart compares a server bought for peak demand with a pay-as-you-grow cloud service that tracks demand. All prices are illustrative. Use what you find to support A4 cost arguments: pay-as-you-grow, idle capacity and total cost of ownership.",["A1 rapid elasticity","A1 measured service","A4 cost","A.M1 / A.D1"],"var(--l2)");
+  const c=el("div","card");
+  const P={staff:38,peakX:1.5,peakM:3,capex:14000,life:5,run:350,onUser:120,perUser:18,tb:4,perTB:20};
+  const F=[
+    ["staff","Staff at normal workload",5,250,1,""],
+    ["peakX","Peak multiplier (contractors, busy season)",1,3,0.1,"×"],
+    ["peakM","Number of peak months per year",0,6,1,""],
+    ["capex","Server, licences and install (one-off, £)",2000,60000,500,"£"],
+    ["life","Server lifetime (years)",3,7,1,""],
+    ["run","On-premises running and support (£ per month)",0,2000,25,"£"],
+    ["onUser","On-premises software licences (£ per user per year)",0,400,10,"£"],
+    ["perUser","Cloud subscription (£ per user per month)",3,40,1,"£"],
+    ["tb","Cloud storage beyond allowance (TB)",0,40,1,""],
+    ["perTB","Extra cloud storage (£ per TB per month)",0,60,1,"£"]
+  ];
+  const form=el("div","sliders");
+  F.forEach(([k,label,min,max,step,u])=>{
+    const w=el("label","slider");
+    const top=el("div","s-top","<span>"+label+"</span><b id='v_"+k+"'></b>");
+    const inp=el("input"); inp.type="range"; inp.min=min; inp.max=max; inp.step=step; inp.value=P[k];
+    inp.oninput=()=>{P[k]=+inp.value; calc();};
+    w.appendChild(top); w.appendChild(inp); form.appendChild(w);
+  });
+  c.appendChild(form);
+  const chart=el("div","chart"); c.appendChild(chart);
+  const out=el("div","kpis"); c.appendChild(out);
+  const verdict=el("div","teach"); c.appendChild(verdict);
+  m.appendChild(c);
+
+  const q=el("div","card");
+  q.appendChild(el("h3",null,"Use the simulator"));
+  const ol=el("ol","tasks");
+  ["The on-premises option needs licences for every user at peak, because software is bought for the most users you will ever have. How does this change the comparison?",
+   "Set the peak multiplier to 1.0. Which option is cheaper over five years now, and why does elasticity no longer help?",
+   "Set 3 peak months at 2.5×. How much of the server's capacity sits idle across the year? Link this to rapid elasticity.",
+   "Raise extra cloud storage to 30 TB. At what point does the cloud stop being cheaper? What does this tell you about large CAD archives?",
+   "Write one sentence for A.D1 that uses a figure from the simulator to justify a recommendation for Harbour & Lane."].forEach(s=>ol.appendChild(el("li",null,s)));
+  q.appendChild(ol);
+  const rv=el("button","btn ghost","Show discussion points"); const md=el("div","model");
+  md.innerHTML="<h4>Discussion points</h4><p>With no peak, the server is sized exactly to demand, so elasticity gives no saving and the comparison becomes a straight capital versus subscription question; over five years a server can win if running costs are low.</p><p>With big peaks, the server must be sized for the peak all year, so capacity is idle in most months. The cloud tracks demand, which is rapid elasticity plus measured service in action.</p><p>Storage-heavy organisations can find cloud storage charges overtake the savings. Archiving old projects to a cheaper tier, or a hybrid design, can reduce this.</p><p>A strong sentence: Over five years the simulator shows pay-as-you-grow costing about £X compared with £Y for a peak-sized server, with Z% of server capacity idle, so the subscription model is preferable provided archive storage is controlled.</p>";
+  rv.onclick=()=>{md.classList.add("show"); rv.disabled=true; mark("cost");};
+  q.appendChild(rv); q.appendChild(md); m.appendChild(q);
+
+  function calc(){
+    F.forEach(([k,,,,,u])=>{ const v=document.getElementById("v_"+k); v.textContent=(u==="£"?"£"+(+P[k]).toLocaleString("en-GB"):(+P[k]).toLocaleString("en-GB")+(u==="×"?"×":"")); });
+    const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const peakIdx=[8,9,10,2,3,4].slice(0,P.peakM); // autumn first
+    const demand=months.map((_,i)=>Math.round(P.staff*(peakIdx.includes(i)?P.peakX:1)));
+    const cap=Math.max(...demand);
+    const used=demand.reduce((a,b)=>a+b,0), avail=cap*12;
+    const idle=avail?Math.round((1-used/avail)*100):0;
+    const onYear=P.capex/P.life+P.run*12+P.onUser*cap;
+    const cloudYear=used*P.perUser+P.tb*P.perTB*12;
+    const on5=onYear*5, cl5=cloudYear*5;
+    // chart
+    const W=820,H=240,pl=44,pr=12,pt=14,pb=28, step=[5,10,20,25,50,100,200,250,500,1000].find(s=>s*4>=cap*1.1)||1000, maxY=step*4;
+    const x=i=>pl+(W-pl-pr)*(i+0.5)/12, y=v=>pt+(H-pt-pb)*(1-v/maxY), bw=(W-pl-pr)/12*0.6;
+    let s="<svg viewBox='0 0 "+W+" "+H+"' role='img' aria-label='Monthly demand compared with fixed server capacity'>";
+    for(let g=0;g<=4;g++){const v=maxY*g/4; s+="<line x1='"+pl+"' x2='"+(W-pr)+"' y1='"+y(v)+"' y2='"+y(v)+"' class='gl'/><text x='"+(pl-6)+"' y='"+(y(v)+4)+"' class='ax' text-anchor='end'>"+Math.round(v)+"</text>";}
+    demand.forEach((d,i)=>{ s+="<rect x='"+(x(i)-bw/2)+"' y='"+y(d)+"' width='"+bw+"' height='"+(y(0)-y(d))+"' class='bar-c' rx='3'><title>"+months[i]+": "+d+" users</title></rect><text x='"+x(i)+"' y='"+(H-8)+"' class='ax' text-anchor='middle'>"+months[i]+"</text>"; });
+    s+="<line x1='"+pl+"' x2='"+(W-pr)+"' y1='"+y(cap)+"' y2='"+y(cap)+"' class='capline'/><text x='"+(W-pr)+"' y='"+(y(cap)-6)+"' class='lbl' text-anchor='end'>Server sized for peak: "+cap+" users</text>";
+    s+="</svg><p class='legend'><span class='sw c'></span>Cloud capacity used and paid for each month (tracks demand) <span class='sw s'></span>Fixed on-premises capacity</p>";
+    chart.innerHTML=s;
+    const f=n=>"£"+Math.round(n).toLocaleString("en-GB");
+    out.innerHTML="<div class='kpi'><span>On-premises per year</span><b>"+f(onYear)+"</b></div><div class='kpi'><span>Cloud per year</span><b>"+f(cloudYear)+"</b></div><div class='kpi'><span>Five-year difference</span><b>"+f(Math.abs(on5-cl5))+"</b><small>"+(cl5<on5?"cloud cheaper":"on-premises cheaper")+"</small></div><div class='kpi'><span>Server capacity idle</span><b>"+idle+"%</b></div>";
+    verdict.innerHTML="<b>What this shows</b>Over five years the cloud option costs "+f(cl5)+" and the server option "+f(on5)+". "+(idle>15?"The server sits "+idle+"% idle because it is bought for the peak, which is the cost that rapid elasticity avoids. ":"Demand is fairly flat, so elasticity saves little here. ")+"Remember the figures the simulator cannot see: staff time to patch the server, the risk of a single site, and the cost of downtime.";
+  }
+  calc();
+}
+
+/* ---------- 3. Delivery model chooser ---------- */
+const DELIV=[
+ {t:"Sunniside Dental Group",d:"Six dental surgeries across Tyneside. Patient records are held in a specialist SaaS practice system. Staff want shared rotas and email, and the owners want the cheapest option that is quick to set up.",a:"Public",w:"Public cloud SaaS gives the lowest entry cost and fastest set-up. Patient data is sensitive, but it is handled by a specialist provider under contract, so the group needs to check the provider's UK GDPR terms and data location, not build its own cloud."},
+ {t:"Northern Regional Building Society",d:"A building society regulated by the PRA and FCA. Its core mortgage ledger must run on infrastructure it controls, but staff email and collaboration can be outsourced.",a:"Hybrid",w:"The core ledger stays on private infrastructure for control and regulatory reasons, while email and collaboration go to public SaaS. That combination is hybrid. A fully private cloud would be expensive for everyday tools."},
+ {t:"Five North East councils",d:"Councils want to share one secure platform for social care case files, built to public-sector security standards, with costs split between them. It must not be open to other customers.",a:"Community",w:"A community cloud is shared by organisations with common concerns (security, compliance, mission) and is closed to the public. It spreads the cost while meeting shared requirements."},
+ {t:"Quayside Gaming Studio",d:"An online game studio with a steady player base. When a new expansion is released, players increase tenfold for two weeks. It already runs its own servers in a co-location centre.",a:"Hybrid",w:"Keeping the steady load on its own servers and bursting to public cloud during launches is cloud bursting, a classic hybrid pattern. Buying servers for ten times normal load would leave them idle most of the year."},
+ {t:"Tyne Defence Systems",d:"A defence contractor handling classified designs. The government customer requires that infrastructure is dedicated, physically separate and fully under the company's control.",a:"Private",w:"Dedicated, controlled infrastructure means private cloud, self-hosted or hosted by a specialist on dedicated hardware. Public multi-tenant cloud would not meet the contractual and security requirements."},
+ {t:"Wallsend Community Choir",d:"A volunteer-run choir with 60 members wants to share sheet music, rehearsal recordings and a calendar. It has no budget and no IT volunteers.",a:"Public",w:"Free or charity-priced public SaaS tools give ubiquitous access without any infrastructure. Music files may be protected by copyright, so the choir must keep sharing within its licence terms."}
+];
+function renderDeliv(m){
+  head(m,"Delivery model chooser","Read each organisation, choose the delivery model that fits best, then check. Each answer comes with the justification an assessor would want to see.",["A2 delivery models","A3 requirements","A.M1"],"var(--l3)");
+  const c=el("div","card"); const ans={};
+  DELIV.forEach((s,i)=>{
+    const q=el("div","q");
+    q.appendChild(el("div","q-head","<div class='q-num'>"+(i+1)+"</div><div class='q-text'><b>"+s.t+".</b> "+s.d+"</div>"));
+    const p=el("div","pills");
+    ["Public","Private","Hybrid","Community"].forEach(o=>{const b=el("button","pill",o); b.onclick=()=>{ans[i]=o; p.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}; p.appendChild(b);});
+    q.appendChild(p); const fb=el("div","feedback"); fb.id="df"+i; q.appendChild(fb); c.appendChild(q);
+  });
+  const acts=el("div","actions"); const chk=el("button","btn","Check all");
+  const res=el("div","level-result");
+  chk.onclick=()=>{ let n=0; DELIV.forEach((s,i)=>{ const fb=document.getElementById("df"+i); const ok=ans[i]===s.a; if(ok)n++; fb.className="feedback show "+(ok?"good":"bad"); fb.innerHTML="<b>"+(ok?"Correct":"Best fit: "+s.a)+"</b>"+s.w; }); res.className="level-result show"; res.innerHTML="<strong>"+n+" / "+DELIV.length+"</strong> correct. In your assignment, justify the model against the organisation's requirements, as in the feedback above."; mark("deliv"); };
+  acts.appendChild(chk); c.appendChild(acts); c.appendChild(res); m.appendChild(c);
+}
+
+/* ---------- 4. Where is my data? ---------- */
+const JQ=[
+ {k:"pd",q:"Will the service hold personal data about clients, staff or customers?",o:["Yes","No"]},
+ {k:"loc",q:"Where will the data be stored?",o:["UK region","EEA region","US region","Not stated by the provider"]},
+ {k:"own",q:"Where is the provider headquartered?",o:["UK","EU","US"]},
+ {k:"keys",q:"Who holds the encryption keys?",o:["Provider-managed keys","Customer-managed keys"]},
+ {k:"exit",q:"Does the contract say how data is returned and deleted when the agreement ends?",o:["Yes, with format and timescale","No, or not clear"]}
+];
+function renderJuris(m){
+  head(m,"Where is my data? Legal ownership and jurisdiction","Answer five questions about a proposed cloud service. The tool builds a list of the legal issues to investigate. Use it to plan the legal and ethical section of your Assignment 1 report or your B1 plan.",["A4 legal ownership and jurisdiction","A5 legislation","B1 legal and ethical"],"var(--l4)");
+  const c=el("div","card"); const a={};
+  JQ.forEach((j,i)=>{
+    const q=el("div","q"); q.appendChild(el("div","q-head","<div class='q-num'>"+(i+1)+"</div><div class='q-text'>"+j.q+"</div>"));
+    const p=el("div","pills"); j.o.forEach(o=>{const b=el("button","pill",o); b.onclick=()=>{a[j.k]=o; p.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}; p.appendChild(b);});
+    q.appendChild(p); c.appendChild(q);
+  });
+  const acts=el("div","actions"); const go=el("button","btn","Build my list"); const out=el("div","model");
+  go.onclick=()=>{
+    if(Object.keys(a).length<JQ.length){ out.className="model show"; out.innerHTML="<p>Answer all five questions first.</p>"; return; }
+    const L=[]; let risk=0;
+    if(a.pd==="Yes"){ L.push(["UK GDPR and DPA 2018","You are the controller and the provider is your processor. You need a written data processing agreement, a lawful basis, an updated privacy notice and a plan to report qualifying breaches to the ICO within 72 hours."]); risk++; }
+    else L.push(["Lower data protection risk","Without personal data, UK GDPR largely falls away, but check for hidden personal data such as names in documents, email addresses and photographs."]);
+    if(a.loc==="UK region") L.push(["Data location","Data at rest stays in the UK, which simplifies compliance. Check where backups, support staff and telemetry are located, as access from abroad can still count as a transfer."]);
+    if(a.loc==="EEA region") L.push(["Transfer to the EEA","The UK has adequacy regulations for the EEA, so transfers are allowed, but record them in your documentation and keep an eye on future changes."]);
+    if(a.loc==="US region"){ L.push(["Restricted transfer to the US","Under UK GDPR this is a restricted transfer. It is lawful if the provider is certified under the UK Extension to the EU-US Data Privacy Framework, or if you use the International Data Transfer Agreement with a transfer risk assessment."]); risk+= a.pd==="Yes"?2:0; }
+    if(a.loc==="Not stated by the provider"){ L.push(["Unknown location: red flag","You cannot meet your UK GDPR obligations if you do not know where the data is. Ask the provider in writing, or choose another provider."]); risk+=2; }
+    if(a.own==="US"){ L.push(["Provider nationality and the CLOUD Act","US law can require a US provider to produce data it controls wherever it is stored. Microsoft France told a French Senate inquiry in June 2025 that it could not guarantee EU-hosted data would never be handed to US authorities. For most organisations the risk is low, but it should be assessed for highly sensitive data."]); risk++; }
+    if(a.own==="EU") L.push(["EU provider","EU law and the EU Data Act apply to the provider. The Data Act gives customers switching rights and removes switching charges in stages, which helps exit planning."]);
+    if(a.own==="UK") L.push(["UK provider","A single legal system for the contract and disputes. Check whether the UK provider itself subcontracts to a hyperscaler, which would bring back the issues above."]);
+    if(a.keys==="Customer-managed keys") L.push(["Customer-managed keys","Holding your own keys limits what the provider can hand over or read, which reduces jurisdiction risk. It also makes you responsible for key backup: lose the key and you lose the data."]);
+    else { L.push(["Provider-managed keys","Simpler to run, but the provider can technically decrypt your data. Consider customer-managed keys for the most sensitive folders."]); risk+= a.own==="US"?1:0; }
+    if(a.exit==="No, or not clear"){ L.push(["Procedures when the agreement ends","Agree how data will be exported, in what format, at what cost and when it will be deleted. The CMA found that egress fees made switching harder in the UK. Without exit terms you risk lock-in."]); risk+=2; }
+    else L.push(["Exit terms in place","Test an export early, so you know the format works and how long it takes for your volume of data."]);
+    L.push(["Dispute resolution","Check the governing law, the escalation path, and whether disputes go to mediation, binding arbitration or the courts, and in which country."]);
+    const lvl=risk>=5?["High","bad"]:risk>=3?["Medium","warn"]:["Low","good"];
+    out.className="model show";
+    out.innerHTML="<h4>Issues to investigate · overall jurisdiction risk: <span class='rk "+lvl[1]+"'>"+lvl[0]+"</span></h4>"+L.map(x=>"<p><b>"+x[0]+".</b> "+x[1]+"</p>").join("")+"<p class='hint'>This is a teaching aid, not legal advice. Sources: <a href='https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-brief-guide-to-international-transfers/' target='_blank' rel='noopener'>ICO international transfers</a> · <a href='https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/adequacy-regulations/how-does-the-uk-extension-to-the-eu-us-data-privacy-framework-work/' target='_blank' rel='noopener'>ICO on the UK Extension</a> · <a href='https://www.theregister.com/off-prem/2025/07/25/microsoft-exec-admits-it-cannot-guarantee-data-sovereignty/458553' target='_blank' rel='noopener'>The Register</a> · <a href='https://digital-strategy.ec.europa.eu/en/factpages/data-act-explained' target='_blank' rel='noopener'>EU Data Act</a></p>";
+    mark("juris");
+  };
+  acts.appendChild(go); c.appendChild(acts); c.appendChild(out); m.appendChild(c);
+}
+
+/* ---------- 5. Case files ---------- */
+const CASES=[
+ {t:"AWS US-East-1 outage",d:"20 October 2025",s:"For about 14 hours, AWS's Northern Virginia region suffered failures that started with DNS problems for the DynamoDB service and spread to EC2 and network load balancers. In the UK, Lloyds, Halifax and Bank of Scotland, HMRC, and apps such as Snapchat, Signal and Ring were disrupted.",
+  src:[["Computer Weekly","https://www.computerweekly.com/news/366633536/AWS-apologises-for-14-hour-outage-and-sets-out-causes-of-US-datacentre-region-downtime"],["ISPreview","https://www.ispreview.co.uk/index.php/2025/10/major-amazon-web-services-outage-disrupting-global-internet-services.html"]],
+  q:"Which key characteristic of cloud made this outage so widespread, and what should a UK organisation do to reduce its exposure?",
+  a:["Resource pooling and multi-tenancy concentrate many customers on shared infrastructure, so one fault affects many organisations at once.","Hidden dependency: UK-facing services relied on a US region.","Mitigations: multi-zone or multi-region design, tested failover, a business continuity plan, understanding the SLA (service credits rarely cover lost revenue).","Spec links: A4 risks (data availability, third-party ownership), A4 backup and disaster recovery."]},
+ {t:"Azure Front Door outage",d:"29–30 October 2025",s:"Between 15:41 UTC on 29 October and 00:05 UTC on 30 October, a sequence of customer configuration changes created incompatible metadata which crashed Azure Front Door edge servers. Microsoft 365, the Azure Portal, Entra ID services and many others were affected. Microsoft's review found its pre-production checks had not tested all features across different build versions.",
+  src:[["Azure status history","https://azure.status.microsoft/en-us/status/history/?trackingId=YKYN-BWZ"]],
+  q:"What does this incident teach about testing and change management for your own B and C solution?",
+  a:["Even valid changes can break a system if they are not tested in combination, which is why C1 functional and compatibility tests matter.","Roll out changes gradually and keep a rollback plan.","Document changes in a log so that you can trace a fault to its cause (C2 reviewing).","A single provider for identity, email and files means one fault can stop everything."]},
+ {t:"OVHcloud Strasbourg fire",d:"10 March 2021",s:"A fire destroyed the SBG2 data centre and damaged part of SBG1. About 65,000 customers and 120,000 services were affected, and Netcraft observed around 3.6 million websites go offline. Restoring service did not always mean data was recovered: customers whose backups were on the same campus lost data permanently.",
+  src:[["BTW Media analysis","https://btw.media/en/the-ovhcloud-fire-showed-that-data-locality-is-not-disaster-separation"],["OVHcloud","https://corporate.ovhcloud.com/en/newsroom/news/informations-site-strasbourg/"]],
+  q:"Why is moving to the cloud not, on its own, a backup strategy?",
+  a:["Availability and backup are different: a provider's redundancy keeps a service running, but does not guarantee your data can be restored.","Backups must be geographically separate from the primary copy, and preferably with a different provider or account.","Customers keep responsibility for their own data in every service model (shared responsibility).","Spec link: A4 backup and disaster recovery; B1 risks and mitigation."]},
+ {t:"Microsoft France and US access",d:"June 2025",s:"Under oath before a French Senate inquiry, Microsoft France's director of public and legal affairs said he could not guarantee that French citizens' data stored in EU data centres would never be transferred to US authorities if legally required.",
+  src:[["The Register","https://www.theregister.com/off-prem/2025/07/25/microsoft-exec-admits-it-cannot-guarantee-data-sovereignty/458553"]],
+  q:"Explain why storing data in a UK or EU data centre does not fully remove jurisdiction risk.",
+  a:["Jurisdiction follows the provider as well as the data: the US CLOUD Act lets US authorities compel US providers to produce data they control wherever it is held.","Mitigations: customer-managed encryption keys, sovereign or locally owned providers for the most sensitive data, contractual commitments to challenge requests.","For most organisations the practical risk is low, but it must be assessed and documented.","Spec link: A4 legal ownership and jurisdiction; multiple jurisdictions."]},
+ {t:"CMA cloud market investigation",d:"31 July 2025",s:"The Competition and Markets Authority found that competition in UK cloud services was not working well. Microsoft and AWS each had a 30–40% share of UK IaaS supply in 2024. It identified egress fees, interoperability barriers and Microsoft's software licensing as limits on customer choice, and recommended strategic market status investigations.",
+  src:[["CMA final decision summary","https://assets.publishing.service.gov.uk/media/688b20e6ff8c05468cb7b120/summary_of_final_decision.pdf"],["GOV.UK case page","https://www.gov.uk/cma-cases/cloud-services-market-investigation"]],
+  q:"How do egress fees and licensing affect an organisation's ability to leave a provider, and how should this shape a plan?",
+  a:["Egress fees are charges for moving data out; with large data volumes they make switching expensive, which is lock-in.","Licensing terms can make running some software cheaper on one provider's cloud than on another's.","Plans should include exit procedures, portable data formats and a costed migration route.","Spec link: A4 procedures when an agreement ends; A4 cost; A2 choosing a model."]},
+ {t:"Capita data breach fine",d:"Fine issued 15 October 2025",s:"The ICO fined Capita plc and Capita Pension Solutions a combined £14 million after a 2023 cyber attack in which the personal data of 6.6 million people was stolen, many of them members of pension schemes that used Capita's services.",
+  src:[["ICO","https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2025/10/capita-fined-14m-for-data-breach-affecting-over-6m-people/"],["BBC News","https://www.bbc.com/news/articles/c9d6yxdq3d2o"]],
+  q:"Hundreds of pension schemes outsourced to Capita. What does the case show about the legal liability of organisations that use third-party providers?",
+  a:["Outsourcing a service does not outsource accountability: controllers must choose processors that give sufficient guarantees of security.","Contracts should set security requirements, audit rights and breach-notification timescales.","Third-party failures cause reputational and financial damage to every client organisation, not just the provider.","Spec link: A5 data protection; legal liability and contractual obligations."]}
+];
+function renderCases(m){
+  head(m,"Case files: real cloud incidents","Six real events from 2021 to 2025. Read each one, discuss the question, then reveal the key points. Use these as evidence in Assignment 1: real examples are what move an explanation towards analysis.",["A4 impact","A5 legislation","A.M1 / A.D1"],"var(--l5)");
+  let opened=0;
+  CASES.forEach((k,i)=>{
+    const c=el("div","card case");
+    c.appendChild(el("div","case-date",k.d)); c.appendChild(el("h3",null,k.t)); c.appendChild(el("p",null,k.s));
+    c.appendChild(el("p","srcline","Source: "+k.src.map(s=>"<a href='"+s[1]+"' target='_blank' rel='noopener'>"+s[0]+"</a>").join(" · ")));
+    c.appendChild(el("div","teach","<b>Discuss</b>"+k.q));
+    const b=el("button","btn ghost","Reveal key points"); const md=el("div","model","<h4>Key points</h4><ul class='revise'>"+k.a.map(x=>"<li>"+x+"</li>").join("")+"</ul>");
+    b.onclick=()=>{md.classList.add("show"); b.disabled=true; opened++; if(opened>=3)mark("cases");};
+    c.appendChild(b); c.appendChild(md); m.appendChild(c);
+  });
+}
+
+/* ---------- 6. Project planner ---------- */
+function renderPlan(m){
+  head(m,"Project planner for Assignment 2 (learning aims B and C)","A working template for planning, building, testing and managing your cloud collaboration solution. Fill it in, add rows as you need them, then print or save it as a PDF to use as evidence. Your entries stay in this browser tab only, so print before closing.",["B1 · B2 · B3","C1 · C2 · C3","B.P3 · C.P5 · B.M2"],"var(--accent)");
+  const sections=[
+    {h:"1 · Client and purpose (B1)",fields:[["Client organisation",""],["Purpose of the solution",""],["Measurable success criteria agreed with the client","such as: files available on any site within 5 minutes of saving"]]},
+    {h:"2 · User needs and technical requirements (B1)",fields:[["User groups and their needs","roles, locations, working patterns, accessibility"],["Platform chosen and why","such as: SaaS tenant, self-hosted Nextcloud on a virtual machine"],["Infrastructure, hardware and software resources",""],["Legal and ethical considerations","data location, licensing, privacy notice, monitoring"]]}
+  ];
+  sections.forEach(s=>{
+    const c=el("div","card"); c.appendChild(el("h3",null,s.h));
+    s.fields.forEach(([l,ph])=>{ const w=el("label","fld"); w.appendChild(el("span",null,l)); const t=el("textarea"); t.placeholder=ph||"Write here…"; t.rows=2; w.appendChild(t); c.appendChild(w); });
+    m.appendChild(c);
+  });
+  const tables=[
+    {h:"3 · User management (B3)",cols:["Group or role","Access rights","Privileges","Storage quota","Password and MFA rule"],rows:[["Partners","All project sites, finance","Owner","100 GB","Passphrase, MFA"],["Guests (clients)","One project folder, view only","Viewer","None","Expiring link, email code"]]},
+    {h:"4 · Risk register (B1, B.M2)",cols:["Risk","Likelihood (L/M/H)","Impact (L/M/H)","Mitigation","Owner"],rows:[["Data loss during migration","M","H","Verified full copy first; migrate one project at a time; keep old server read-only for 30 days","Me"]]},
+    {h:"5 · Design review log (B2)",cols:["Date","Who attended","Feedback received","Change to design","Signed off"],rows:[["","","","",""]]},
+    {h:"6 · Test plan (C1)",cols:["Test type","Test","Expected result","Actual result","Pass or fail / action"],rows:[["Functional","Restore yesterday's version of a file","Previous version restored in under 2 minutes","",""],["Security","Sign in from a new device without MFA","Access blocked","",""],["Performance","Sync a 500 MB file from the second site","Available within 5 minutes","",""],["User","Screen reader user finds and shares a drawing","Task completed without help","",""],["Stress","20 simultaneous 1 GB uploads","Service remains usable; no failed uploads","",""]]},
+    {h:"7 · Two-week management log (C1, C2)",cols:["Day and date","Checks carried out","Issue found","Action taken","Optimisation? (C.M3)"],rows:Array.from({length:14},(_,i)=>["Day "+(i+1),"","","",""])},
+    {h:"8 · Optimisations, before and after (C.M3)",cols:["Area (security, performance, features, upgrade)","Before (evidence)","Change made","After (evidence)","Benefit to client"],rows:[["","","","",""]]}
+  ];
+  tables.forEach(T=>{
+    const c=el("div","card"); c.appendChild(el("h3",null,T.h));
+    const sc=el("div","table-scroll"); const t=el("table","plan");
+    t.innerHTML="<tr>"+T.cols.map(x=>"<th>"+x+"</th>").join("")+"<th class='x'></th></tr>";
+    const addRow=r=>{ const tr=el("tr"); T.cols.forEach((_,j)=>{ const td=el("td"); const ta=el("textarea"); ta.rows=2; ta.value=r?r[j]||"":""; ta.setAttribute("aria-label",T.cols[j]); td.appendChild(ta); tr.appendChild(td); }); const td=el("td","x"); const del=el("button","btn grey sm","Remove"); del.onclick=()=>tr.remove(); td.appendChild(del); tr.appendChild(td); t.appendChild(tr); };
+    T.rows.forEach(addRow);
+    sc.appendChild(t); c.appendChild(sc);
+    const add=el("button","btn ghost sm","Add a row"); add.onclick=()=>addRow(null);
+    const a=el("div","actions tight"); a.appendChild(add); c.appendChild(a); m.appendChild(c);
+  });
+  const c=el("div","card"); c.appendChild(el("h3",null,"9 · Lessons learned and own skills (C3, C5, BC.D3)"));
+  [["Did the solution meet each success criterion? Give evidence",""],["Alternatives you considered and why this solution is still the best fit",""],["Own skills: responsibility, creativity, self-management, with evidence such as meeting notes and time plans",""],["Two specific targets for your own development",""]].forEach(([l])=>{const w=el("label","fld"); w.appendChild(el("span",null,l)); const t=el("textarea"); t.rows=3; t.placeholder="Write here…"; w.appendChild(t); c.appendChild(w);});
+  const a=el("div","actions"); const pr=el("button","btn","Print / save as PDF"); pr.onclick=()=>window.print(); a.appendChild(pr); c.appendChild(a);
+  m.appendChild(c);
+}
+
+/* ---------- Resources ---------- */
+const RES=[
+ ["Specification and guidance",[
+  ["Pearson BTEC Nationals IT specification (Extended Diploma, Unit 16)","https://qualifications.pearson.com/content/dam/pdf/BTEC-Nationals/Information-Technology/2016/specification-and-sample-assessments/specification-pearson-btec-level-3-national-extended-diploma-in-information-technology.pdf","Unit content, criteria, assessment guidance and suggested scenarios."],
+  ["NIST SP 800-145: The NIST Definition of Cloud Computing","https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-145.pdf","The short source document for the five characteristics, three service models and four deployment models."]]],
+ ["Security and responsibility",[
+  ["NCSC: the 14 cloud security principles","https://www.ncsc.gov.uk/collection/cloud/the-cloud-security-principles","UK government guidance for choosing a provider that meets your security needs; useful for B1 and C2."],
+  ["NCSC: using a cloud platform securely","https://www.ncsc.gov.uk/collection/cloud/using-cloud-services-securely/using-a-cloud-platform-securely","Access control, automation and logging goals for customers."],
+  ["Microsoft Learn: shared responsibility in the cloud","https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility","The provider's own diagram of who manages what in IaaS, PaaS and SaaS."]]],
+ ["Law and jurisdiction",[
+  ["ICO: a brief guide to international transfers","https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-brief-guide-to-international-transfers/","When sending data abroad, or making it accessible abroad, counts as a restricted transfer."],
+  ["ICO: the UK Extension to the EU-US Data Privacy Framework","https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/adequacy-regulations/how-does-the-uk-extension-to-the-eu-us-data-privacy-framework-work/","How transfers to certified US organisations work."],
+  ["ICO: the Data (Use and Access) Act 2025 for organisations","https://ico.org.uk/about-the-ico/what-we-do/legislation-we-cover/data-use-and-access-act-2025/the-data-use-and-access-act-2025-what-does-it-mean-for-organisations/","What changed in UK data protection law; all data protection provisions in force from June 2026."],
+  ["CRS: Cross-border data sharing under the CLOUD Act","https://www.congress.gov/crs-product/R45173","US Congressional Research Service explainer on the CLOUD Act 2018."],
+  ["European Commission: Data Act explained","https://digital-strategy.ec.europa.eu/en/factpages/data-act-explained","Switching rights and the removal of switching charges for cloud customers."]]],
+ ["Market and policy",[
+  ["CMA cloud services market investigation: summary of final decision","https://assets.publishing.service.gov.uk/media/688b20e6ff8c05468cb7b120/summary_of_final_decision.pdf","Market shares, egress fees, licensing and switching barriers in the UK."],
+  ["GOV.UK: Government Cloud First policy","https://www.gov.uk/guidance/government-cloud-first-policy","Why the UK public sector must consider cloud before other options."],
+  ["Cyber security breaches survey 2025","https://www.gov.uk/government/statistics/cyber-security-breaches-survey-2025","Official statistics on how UK organisations manage cyber risk, including cloud and suppliers."]]],
+ ["Practical tools for Assignment 2",[
+  ["Nextcloud","https://nextcloud.com/","Open-source, self-hostable file sync and collaboration; good for a self-hosted or VM-based solution."],
+  ["Oracle VirtualBox","https://www.virtualbox.org/","Free hypervisor for a simulated virtual infrastructure (B3 server, guest OS image, resource allocation)."],
+  ["AWS Free Tier","https://aws.amazon.com/free/","Free usage limits for trying IaaS virtual machines and storage."],
+  ["Microsoft Learn: Azure training","https://learn.microsoft.com/en-us/training/azure/","Free modules on cloud concepts and Azure fundamentals."]]]
+];
+function renderRes(m){
+  head(m,"Resources","Curated, checked sources for teaching and for learners' assignment research. Every link opens in a new tab.",["Teacher and learner"],"var(--muted)");
+  RES.forEach(([h,items])=>{
+    const c=el("div","card"); c.appendChild(el("h3",null,h));
+    const ul=el("ul","reslist"); items.forEach(([t,u,d])=>ul.appendChild(el("li",null,"<a href='"+u+"' target='_blank' rel='noopener'>"+t+"</a><span>"+d+"</span>"))); c.appendChild(ul); m.appendChild(c);
+  });
+}
+
+buildNav(); render();
+</script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  const DEFAULT_LINE_HEIGHT = 16;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  const PICK_CAPABILITIES = ["pick"];
+  const PICK_CHAIN_LENGTH = 4;
+  const PICK_MAX_TEXT_CHARS = 120;
+  const PICK_MAX_HTML_CHARS = 300;
+
+  function truncate(value, maxChars) {
+    return value.length > maxChars ? value.slice(0, maxChars - 1) + "…" : value;
+  }
+
+  function isPickableElement(element) {
+    return (
+      element instanceof Element &&
+      element !== document.documentElement &&
+      element !== document.body
+    );
+  }
+
+  function resolvePickTarget(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const element = document.elementFromPoint(x, y);
+    return isPickableElement(element) ? element.closest("svg") || element : null;
+  }
+
+  function pickLabel(element) {
+    if (element.id) return element.localName + "#" + element.id;
+    return [element.localName].concat(Array.from(element.classList).slice(0, 2)).join(".");
+  }
+
+  // Only attributes that help find the element in source. data-* values and URL
+  // query strings or fragments can carry tokens.
+  const PICK_ATTRIBUTES = new Set([
+    "id",
+    "class",
+    "name",
+    "type",
+    "role",
+    "alt",
+    "aria-label",
+    "href",
+    "src",
+  ]);
+
+  function pickAttributeValue(attribute) {
+    return attribute.name === "href" || attribute.name === "src"
+      ? attribute.value.split(/[?#]/)[0]
+      : attribute.value;
+  }
+
+  function describePickElement(element) {
+    const chain = [];
+    for (
+      let current = element;
+      isPickableElement(current) && chain.length < PICK_CHAIN_LENGTH;
+      current = current.parentElement
+    ) {
+      chain.unshift(current);
+    }
+    const attributes = Array.from(element.attributes)
+      .filter((attribute) => PICK_ATTRIBUTES.has(attribute.name))
+      .map((attribute) => ` ${attribute.name}="${pickAttributeValue(attribute).replace(/"/g, "&quot;")}"`)
+      .join("");
+    const text = (element.innerText || element.textContent || "").replace(/\s+/g, " ").trim();
+    return {
+      chain: chain.map(pickLabel),
+      html: truncate(`<${element.localName}${attributes}>`, PICK_MAX_HTML_CHARS),
+      text: text ? truncate(text, PICK_MAX_TEXT_CHARS) : undefined,
+    };
+  }
+
+  // Hover asks once per frame, and innerText on a large section forces layout,
+  // so only the rect is re-read while the pointer stays on the same element.
+  // Clicks ask for fresh details since the page may have changed the element.
+  let lastPick = null;
+
+  function describePickTarget(element, fresh) {
+    if (fresh || lastPick?.element !== element) {
+      lastPick = { element, details: describePickElement(element) };
+    }
+    const rect = element.getBoundingClientRect();
+    return {
+      rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      ...lastPick.details,
+    };
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      capabilities: PICK_CAPABILITIES,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_PICK") {
+      const element = resolvePickTarget(event.data.x, event.data.y);
+      postToTrustedTop({
+        type: "INLINE_EDIT_PICK_RESULT",
+        seq: event.data.seq,
+        target: element ? describePickTarget(element, event.data.fresh === true) : null,
+      });
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_BY") {
+      const { deltaX, deltaY, deltaMode } = event.data;
+      if (!scrollForwarding || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+      if (deltaMode !== 0 && deltaMode !== 1 && deltaMode !== 2) return;
+      const lineHeight =
+        parseFloat(getComputedStyle(document.documentElement).lineHeight) || DEFAULT_LINE_HEIGHT;
+      const scaleX = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerWidth : 1;
+      const scaleY = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerHeight : 1;
+      // The selection overlay receives the wheel event instead of this iframe.
+      // Instant scrolling preserves trackpad deltas even on smooth-scroll sites.
+      window.scrollBy({ left: deltaX * scaleX, top: deltaY * scaleY, behavior: "instant" });
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+</script></body>
+</html>
