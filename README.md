@@ -1,49 +1,43 @@
-# iCOR Analytics Database
+# Smart Home Agent
 
-A relational database system designed for the iCOR Phase 1 projects. The database stores and manages information about organisations, users, audits, compliance checks, tasks, and predictive model performance.
+A multi-agent smart home system developed in Python that processes sensor data and makes decisions about home security, climate control, and energy usage.
 
 ## Features
-- Organisation Management: stores organisations and their industry information.
-- User Management: stores users, departments, roles, and employee tenure.
-- Audit Management: stores audit types, scope complexity, start dates, and end dates.
-- Compliance Monitoring: records compliance checks and identifies compliant, non-compliant, and at-risk results.
-- Task Management: stores assigned tasks, priorities, deadlines, completion dates, and task status.
-- Model Metrics: stores performance measurements for the predictive analytics models.
-- Database Relationships: connects related information using primary and foreign keys.
+- **Security Agent:** Detects potential intrusions, unusual motion, and door or window events.
+- **Climate Agent:** Uses temperature readings to determine appropriate heating or cooling actions.
+- **Energy Agent:** Monitors device usage and identifies potential energy waste.
+- **Smart Home Manager:** Routes sensor data to the appropriate agent and records decisions.
+- **Database Integration:** Stores sensor readings, device states, agent decisions, system logs, and anomalies.
+- **Testing:** Tests agent behaviour, decision rules, and system accuracy.
 
 ## Project Structure
-- `/database/` — database tables and SQL schema
-- `/queries/` — SQL queries used to analyse the database
-- `/reports/` — database reports and analytical results
-- `/forms/` — forms used to enter and view database information
-- `/tests/` — database testing and validation
+- `/agents/` — Python classes for each specialist agent.
+- `/manager/` — coordinates agents and routes sensor data.
+- `/database/` — SQL schema and database models.
+- `/tests/` — test cases for agent functionality and accuracy.
+- `main.py` — entry point for running the system.
 
 ## Database
-The project uses a relational database to store:
-- Organisations
-- Users
-- Audits
-- Compliance checks
-- Tasks
-- Model performance metrics
+The project uses a database to store:
+- Sensor readings
+- Agent decisions
+- Device states
+- System logs
+- Detected anomalies
 
-The database uses relationships between tables to reduce duplicated data and allow information to be retrieved using SQL queries.
+See `/database/schema.sql` for the database schema.
 
 ## How to Run
-1. Open Microsoft Access.
-2. Open the iCOR database.
-3. Use the tables to view or enter data.
-4. Run the SQL queries to analyse the stored information.
-5. Use forms and reports to view the results.
+1. Install the required dependencies.
+2. Run `python main.py`.
+3. View system decisions and logs in the console or database.
 
 ## Purpose
-This project is built for the iCOR Phase 1 projects and demonstrates:
-- Relational database design
-- Primary and foreign keys
-- Table relationships
-- Data storage and management
-- SQL queries
-- Data validation
-- Compliance monitoring
-- Task and audit management
-- Predictive analytics data storage
+This project demonstrates:
+- Multi-agent systems
+- Specialist agents
+- Sensor data processing
+- Decision-making rules
+- Agent coordination and routing
+- Database integration
+- Logging and testing
